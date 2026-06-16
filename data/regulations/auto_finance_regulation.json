@@ -1,0 +1,264 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 자동차 금융 규제·세제 JSON 초안 (DB 스키마 확정 전). 금융 상품별 대출 기간·금액(LTV)·수수료/금리 상한 등 운영 조건 규제와 상품별 세제 혜택을 국가·공식 출처 기준으로 정리.",
+    "definition_doc": "requirements/data/02_regulations/ (정의 문서 미작성 — global_constraints.md 및 사용자 지시 기준으로 조사)",
+    "scope_note": "사용자 지시: 금융 상품별 최소/최대 대출 기간, 대출 금액, 수수료 상한 등 운영 조건 규제 + 상품별 세제 혜택. 대상 국가=미국·인도. 대상 연도=2025/2026 중 최신 갱신본.",
+    "data_year": "2025-2026 (항목별 최신 갱신본 기준연도 별도 표기)",
+    "countries": ["미국", "인도"],
+    "items": [
+      "term_limit (최소/최대 대출 기간 규제)",
+      "amount_ltv (대출 금액·LTV 한도 규제)",
+      "rate_fee_prepay (금리·수수료 상한·중도상환수수료 등 운영 조건 규제)",
+      "tax_benefit (상품별 세제 혜택 여부)"
+    ],
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, doc_ref?, quote?, note?} 객체로 표기한다. estimated=true 는 추정/미확정, false 는 공식 출처로 확정. value=null 또는 status='공식 자료에서 확인 불가' 는 미확보(누락=미확보, 지어내기 금지).",
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정.",
+      "출처는 국가 기관·규제기관·공식 법령만 사용(뉴스/블로그/비교사이트 배제). 미국=Federal Reserve·CFPB·NCUA·IRS·주(state) 법령 / 인도=RBI·Income Tax Dept·GST Council·PIB(재무부·중공업부).",
+      "deep-research(적대적 검증, claim별 3표) 통과(CONFIRMED) 항목만 estimated=false 로 수록. 반증(REFUTED) 항목은 미수록하되 open_gaps에 사유 기록.",
+      "미국: 연방(TILA/Reg Z·NCUA·IRS)과 주(NY·CA)를 구분. 주별 usury(금리 상한)·중도상환 규제는 주마다 상이 — NY·CA 2개 주만 검증, 나머지 48개 주 미확보.",
+      "인도: RBI는 상품 운영 조건(기간·LTV·금리)을 캡으로 직접 규제하기보다 '건전성·공정관행' 틀로 규율. 자동차 대출 전용 LTV/기간 상한은 RBI가 별도로 정하지 않음(은행·NBFC 자체 board-approved 신용정책에 위임)이 적대적 검증으로 확인됨.",
+      "세제: 미국은 OBBB(Public Law 119-21, 2025.7.4)로 EV 세액공제 종료(2025.9.30 취득분부터)·신규 자동차 대출이자 소득공제 신설. 인도는 EV 대출이자 공제(80EEB)·EV/소형차 GST 인하가 핵심.",
+      "상품 유형(오토론·리스·장기렌트) 세분: 미국 리스는 Consumer Leasing Act/Reg M(12 CFR 1013) 적용이나 리스 전용 운영규정(잔가·주행거리·조기종료)은 별도 미검증. '장기렌트' 전용 규제는 양국 모두 미확보."
+    ],
+    "verification": "deep-research workflow (fan-out search → fetch primary sources → 3-vote adversarial verification). US: 25 claims confirmed / 0 refuted. IN: 13 confirmed / 2 refuted(수치 오류). 일부 RBI rbidocs PDF는 직접 fetch 시 403/CAPTCHA로 미러·공식 notification 페이지 교차확인.",
+    "open_gaps": [
+      "미국 주별 규제: NY·CA 외 48개 주의 usury/금리 상한·중도상환 규제 미확보.",
+      "미국 리스(Reg M)·장기렌트 전용 운영규정(잔가·주행거리·조기종료) 미검증.",
+      "인도 자동차 대출 전용 '최소/최대 기간' 명시 상한: 공식 자료에서 확인 불가(RBI가 자동차 대출 기간 캡을 별도 규정하지 않음 — 미확보).",
+      "인도 자동차 대출 LTV 수치 상한: RBI 자동차 대출 전용 LTV 상한 없음(은행/NBFC 자체 정책)은 확인. 단 후보 claim의 주택대출 LTV 표(20락=90%)는 30락 기준으로 갱신되어 수치 오류로 기각 → 자동차 대출과 무관해 미수록.",
+      "인도 신차/중고차 대출 침투율·평균 금리·금리 상한: 공식 자료에서 확인 불가(RBI는 금리 캡 대신 공정관행·EBLR 연동 틀).",
+      "양국 '장기렌트(long-term rental)' 전용 규제: 공식 자료에서 확인 불가."
+    ]
+  },
+
+  "regulations": [
+    {
+      "country": "미국",
+      "country_code": "US",
+      "region": "미주",
+      "status": "확보(연방+NY·CA 주 일부)",
+      "regulatory_framework": {
+        "value": "연방은 '금리·기간·수수료 캡'이 아닌 '정보공시(disclosure)' 규제 중심. 자동차 대출(closed-end credit)은 Truth in Lending Act(TILA, 15 U.S.C. 1601 et seq.) → Regulation Z(12 CFR Part 1026), 소비자 리스는 Consumer Leasing Act → Regulation M(12 CFR 1013), 감독기관은 CFPB. 금리/수수료 상한은 연방이 아닌 주(state) usury법·NCUA(연방신협)에서 규율.",
+        "year": 2025,
+        "estimated": false,
+        "source": "CFPB Supervisory Highlights — Auto Finance (Special Edition), Federal Register 2024-24093 (2024.10.18); Reg Z 12 CFR 1026.1(b)",
+        "quote": "The origination of automobile loans is governed by the Truth in Lending Act (TILA) as implemented by Regulation Z ... 12 C.F.R. Part 1026. Reg Z purpose: 'to promote the informed use of consumer credit by requiring disclosures ... does not generally govern charges for consumer credit.'",
+        "note": "단, CFPB는 Dodd-Frank §1029에 따라 대부분의 독립 딜러에 대한 권한 없음(FTC 분담). 현역 군인은 Military Lending Act §987로 별도 36% MAPR 상한 적용."
+      },
+      "products": {
+        "auto_loan": {
+          "label": "오토론 / 할부 (closed-end consumer credit)",
+          "term_limit": {
+            "value": "연방 법령상 최소/최대 대출 기간 한도 없음",
+            "year": 2025,
+            "estimated": false,
+            "source": "TILA / Regulation Z (12 CFR Part 1026)",
+            "note": "TILA/Reg Z는 기간 상한을 두지 않음. 기간은 대주(lender)·주법 영역."
+          },
+          "amount_ltv": {
+            "value": "연방 LTV·대출금액 상한 없음. 단 Reg Z/Reg M '적용범위' 기준선은 2026년 $73,400 이하 소비자 신용·리스 거래(2025년 $71,900 → CPI-W 2.1% 인상). 이는 대출금액 캡이 아니라 공시규제 적용 한도.",
+            "year": 2026,
+            "estimated": false,
+            "source": "Fed/CFPB joint final rules, CFPB newsroom(2025.12.15); Federal Register 2025-22814(Reg Z)·2025-22813(Reg M)",
+            "quote": "Regulation Z and Regulation M generally will apply to consumer credit transactions and consumer leases of $73,400 or less in 2026.",
+            "note": "거래액이 한도 초과면 일반적으로 공시규제 면제(모기지·사학자금은 금액 무관 적용). 자동차 대출 LTV·min/max 금액 연방 상한 없음."
+          },
+          "rate_fee_prepay": {
+            "rate_cap_federal": {
+              "value": "연방 금리·수수료 상한 없음(TILA/Reg Z는 정확한 공시만 의무화)",
+              "year": 2025,
+              "estimated": false,
+              "source": "Reg Z 12 CFR 1026.18, 1026.17; CFPB Supervisory Highlights(2024)",
+              "quote": "Reg Z does not generally govern (cap) the charges for consumer credit; it requires disclosure of APR, finance charge, amount financed, total of payments.",
+              "note": "금리·수수료·중도상환수수료는 '공시' 대상이지 '상한/금지' 대상 아님."
+            },
+            "prepayment_penalty_federal": {
+              "value": "연방상 중도상환수수료 금지·상한 없음. Reg Z 1026.18은 '중도상환수수료/환급 적용 여부를 명확히 공시'할 것만 의무화.",
+              "year": 2025,
+              "estimated": false,
+              "source": "Reg Z 12 CFR 1026.18; 1026.17(c)(1); CFPB Supervisory Highlights(2024)",
+              "quote": "Reg Z 1026.18 requires a definitive statement of whether a prepayment penalty applies — but does NOT prohibit or cap it. Disclosures must reflect the legal obligation between parties.",
+              "note": "CFPB 검사에서 중도상환수수료 부정확 공시로 오토론 originator 적발 사례 있음(공시 위반 차원)."
+            },
+            "rate_cap_ncua_federal_credit_union": {
+              "value": 0.18,
+              "year": 2026,
+              "estimated": false,
+              "source": "NCUA Board(2026), 'NCUA Board Extends Loan Interest Rate Ceiling'; Federal Credit Union Act 12 U.S.C. 1757(5)(A)(vi)(I)",
+              "quote": "The Federal Credit Union Act generally limits federal credit unions to a 15-percent interest rate ceiling on loans; the current 18% ceiling is extended to September 10, 2027.",
+              "note": "연방신용조합(federal credit union)에만 적용. 법정 기본상한 15%, NCUA가 한시적 18%로 상향(2027.9.10까지, 이후 15% 복귀). Payday alternative loan은 28%까지. 일반 은행·캡티브에는 미적용."
+            },
+            "rate_cap_state_NY": {
+              "value": 0.16,
+              "year": 2025,
+              "estimated": false,
+              "source": "New York General Obligations Law §5-501; Banking Law §14-a",
+              "quote": "NY GOL §5-501(1): rate 'shall be six per centum per annum unless a different rate is prescribed in ... section fourteen-a of the banking law' (operative civil usury cap 16%).",
+              "note": "기본 법정이율 6%, 민사 usury 상한 16%(Banking Law §14-a)."
+            },
+            "rate_fee_cap_state_CA": {
+              "value": "캘리포니아 Rees-Levering 자동차판매금융법(Civil Code §2982): 선이자(precomputed finance charge) 구간별 상한 — 미상환잔액 $225까지 월 1.5%, $900까지 월 1⅙%(~1.167%), $2,500까지 월 5/6%(~0.833%), 또는 전체 잔액 월 1% 중 큰 값(최소 $25). 중도상환수수료 금지.",
+              "year": 2025,
+              "estimated": false,
+              "source": "California Civil Code §2982 (Automobile Sales Finance Act / Rees-Levering Act), §2982(j)(1)·(l)(1)",
+              "quote": "§2982(l)(1): 'the buyer may pay at any time before maturity the entire indebtedness ... without penalty.' §2982(j)(1) caps precomputed finance charge at tiered monthly rates or 1%/month of unpaid balance, $25 minimum.",
+              "note": "주별 usury/금융수수료 상한은 주마다 상이 — NY·CA 2개 주만 검증, 타 주 미확보."
+            }
+          },
+          "tax_benefit": {
+            "car_loan_interest_deduction": {
+              "value": "신설: 신규 자동차 대출이자 소득공제, 연 최대 $10,000",
+              "year": 2025,
+              "estimated": false,
+              "source": "IRS/Treasury guidance, 'Treasury, IRS provide guidance on the new deduction for car loan interest under the One Big Beautiful Bill'; OBBB Public Law 119-21(2025.7.4); Federal Register 2025-24154('Car Loan Interest Deduction', 2026.1.2 게재, 의견수렴 2026.2.2까지)",
+              "quote": "$10,000 annual deduction limit on interest paid on vehicle loans incurred after Dec. 31, 2024, to purchase new made-in-America vehicles for personal use.",
+              "note": "과세연도 2025~2028 한시. 요건: 2024.12.31 이후 발생 대출, 신차·개인용도, 미국 내 최종조립(VIN/라벨 확인). 표준공제자도 가능. MAGI $100,000(부부합산 $200,000) 초과 시 단계적 축소. Schedule 1-A로 신청. 최종규칙은 의견수렴 후 변경 가능."
+            }
+          }
+        },
+
+        "ev_tax_linked": {
+          "label": "EV 차량 구매 연계 세제 (대출·리스 공통, 차량 단위)",
+          "ev_credit_terminated": {
+            "value": "EV/클린차량 세액공제 종료 — §30D(신차 클린차량), §25E(중고 클린차량), §45W(상용 클린차량) 모두 2025.9.30 이후 취득분부터 폐지",
+            "year": 2025,
+            "estimated": false,
+            "source": "IRS FAQ for modification under Public Law 119-21(OBBB, 139 Stat. 72, 2025.7.4); IRS 'Commercial Clean Vehicle Credit'; OBBB §70503",
+            "quote": "§30D: 'The credit will not be allowed for any vehicle acquired after September 30, 2025'; §25E: same; §45W terminated for vehicles acquired after Sept 30, 2025. ('Acquired' = written binding contract + payment.)",
+            "note": "종료 전 §45W 상한은 GVWR 14,000lbs 미만 $7,500 / 14,000lbs 이상 $40,000였음. 2025.9.30 이후 취득분은 모두 적용 불가."
+          }
+        }
+      }
+    },
+
+    {
+      "country": "인도",
+      "country_code": "IN",
+      "region": "아시아 & 태평양",
+      "status": "부분확보",
+      "regulatory_framework": {
+        "value": "RBI는 자동차 대출의 기간·LTV·금리를 '캡'으로 직접 규제하기보다 건전성(risk weight)·공정관행(중도상환·공시) 틀로 규율. 자동차 대출 전용 기간/LTV 상한은 RBI가 별도로 정하지 않고 은행·NBFC의 board-approved 신용정책에 위임. 세제는 소득세법(80EEB)·GST Council 소관.",
+        "year": "2023-2026",
+        "estimated": false,
+        "source": "RBI/2023-24/85 DOR.STR.REC.57/21.06.001/2023-24(2023.11.16); RBI(Pre-payment Charges on Loans) Directions, 2025; GST Council/PIB",
+        "note": "적대적 검증관 3인 모두 'RBI는 자동차 대출 전용 LTV 상한을 두지 않으며 대주 자체 신용정책에 위임'이 정확하다고 확인."
+      },
+      "products": {
+        "auto_loan": {
+          "label": "오토론 / 차량대출 (vehicle loan, 은행·NBFC)",
+          "term_limit": {
+            "value": null,
+            "status": "공식 자료에서 확인 불가",
+            "year": 2025,
+            "estimated": false,
+            "source": null,
+            "note": "RBI가 자동차 대출 전용 최소/최대 기간 상한을 규정한 공식 자료를 확인하지 못함(미확보). 기간은 대주 자체 정책."
+          },
+          "amount_ltv": {
+            "value": "RBI는 자동차/차량 대출 전용 LTV·대출금액 상한을 별도로 정하지 않음 — 대주(은행·NBFC)의 board-approved 신용정책에 위임",
+            "year": 2025,
+            "estimated": false,
+            "source": "적대적 검증(3인) 합의 — RBI 주택대출에는 LTV 상한 존재하나 자동차 대출에는 RBI 규정 LTV 상한 부재. (RBI Master Circular on Housing Finance 대비 확인)",
+            "note": "후보 자료의 '주택대출 LTV 표(20락=90%)'는 RBI가 30락 기준으로 갱신해 수치 오류로 기각 → 자동차 대출과 무관해 미수록. '자동차 대출 LTV 상한 부재'만 확정."
+          },
+          "rate_fee_prepay": {
+            "rate_cap": {
+              "value": null,
+              "status": "공식 자료에서 확인 불가",
+              "year": 2025,
+              "estimated": false,
+              "source": null,
+              "note": "RBI가 자동차 대출 금리 상한을 캡으로 정한 공식 자료 미확보(RBI는 EBLR 연동·공정관행 틀로 규율). 미확보."
+            },
+            "prepayment_charges_2025_directions": {
+              "value": "변동금리(floating-rate) 대출의 중도상환(foreclosure)수수료 금지 — 개인(비사업목적) 및 MSE(사업목적) 대상. 부분/전액·상환재원 불문, 최소 lock-in 없음.",
+              "year": "2025 (effective 2026.1.1)",
+              "estimated": false,
+              "source": "RBI(Pre-payment Charges on Loans) Directions, 2025; RBI/2025-26/64; DoR.MCS.REC.38/01.01.001/2025-26(2025.7.2). PDF: rbidocs.rbi.org.in/.../NT642A32A71F06D649B78A9622FB82B8C438.PDF",
+              "quote": "No pre-payment charges shall be levied on floating-rate loans to: Individuals (for purposes other than business), and MSEs (for business purposes) ... regardless of the source of repayment, whether partial or full, and with no minimum lock-in period.",
+              "note": "2026.1.1 이후 sanction/renew된 모든 대출(term·demand)에 적용. 적용기관=상업은행(Payments Bank 제외)·협동조합은행·NBFC·AIFI. 변동금리 자동차 대출(개인)이면 중도상환수수료 면제 대상."
+            },
+            "prepayment_other_protections": {
+              "value": "중도상환수수료 소급부과 금지, 기존 면제분 부과 금지, 대주측 요구에 의한 중도상환 시 부과 금지. 적용/면제 여부는 sanction letter·loan agreement·Key Facts Statement(KFS)에 사전 공시해야 하며 미공시분은 회수 불가.",
+              "year": "2025 (effective 2026.1.1)",
+              "estimated": false,
+              "source": "RBI(Pre-payment Charges on Loans) Directions, 2025; RBI/2025-26/64; DoR.MCS.REC.38/01.01.001/2025-26(2025.7.2)",
+              "quote": "Pre-payment charges cannot be levied retrospectively or where the charges were previously waived. No charges shall be imposed if the pre-payment is initiated at the instance of the lending institution. ... must disclose ... in: Sanction letters, Loan agreements, and Key Facts Statements (KFS).",
+              "note": "이중/특수금리(고정+변동) 대출은 중도상환 시점에 변동금리면 면제 적용."
+            }
+          },
+          "prudential_treatment": {
+            "risk_weight_exclusion": {
+              "value": "RBI가 소비자신용 risk weight를 125%로 상향(2023)했으나 차량대출은 명시 제외 — 은행·NBFC 모두. 즉 차량대출은 통상(낮은) risk weight 유지.",
+              "year": "2023-24",
+              "estimated": false,
+              "source": "RBI/2023-24/85, DOR.STR.REC.57/21.06.001/2023-24, 'Regulatory measures towards consumer credit and bank credit to NBFCs'(2023.11.16)",
+              "quote": "the risk weights on ... consumer credit exposure of commercial banks ... including personal loans, but excluding housing loans, education loans, vehicle loans and loans secured by gold ... increased by 25 percentage points to 125%.",
+              "note": "건전성 규제(운영조건 캡 아님). 시뮬레이션상 차량금융이 소비자신용 규제 강화에서 우대됨을 의미."
+            },
+            "topup_unsecured": {
+              "value": "차량 등 본질적으로 가치하락하는 동산 담보의 top-up 대출은 신용평가·건전성한도·익스포저 산정상 '무담보'로 취급",
+              "year": "2023-24",
+              "estimated": false,
+              "source": "RBI/2023-24/85, DOR.STR.REC.57/21.06.001/2023-24(2023.11.16)",
+              "quote": "all top-up loans extended by REs against movable assets which are inherently depreciating in nature, such as vehicles, shall be treated as unsecured loans for credit appraisal, prudential limits and exposure purposes."
+            }
+          },
+          "tax_benefit": {
+            "gst_on_vehicle_purchase": {
+              "value": "차량 구매 GST(56차 GST Council, 2025.9.22 시행): 소형차 28%→18%, 중·대형차(>1500cc 또는 길이>4000mm) 40%(cess 폐지, full ITC).",
+              "year": "2025 (effective 2025.9.22)",
+              "estimated": false,
+              "source": "PIB/재무부, FAQs on 56th GST Council, Release ID 2163560(2025.9.3); PIB/도로교통부 Release ID 2165916(2025.9.12)",
+              "quote": "The GST rate on all small cars has been reduced from 28% to 18% (Petrol/LPG/CNG ≤1200cc & ≤4000mm; Diesel ≤1500cc & ≤4000mm). Mid-size and large cars (>1500cc or >4000mm) = 40%. Effective 22nd September 2025.",
+              "note": "금융상품 자체 세제는 아니나 차량 구매가(=대출원금)에 직접 영향. 대형차는 종전 28%+cess → 40% flat + full ITC로 단순화."
+            }
+          }
+        },
+
+        "ev_loan": {
+          "label": "EV(전기차) 대출 — 세제 연계",
+          "interest_deduction_80EEB": {
+            "value": "EV 구매 대출이자 소득세 추가공제 최대 Rs 1.5 lakh (Income Tax Act §80EEB, Finance Act 2019 도입)",
+            "year": "2019 도입 (AY 2020-21~ 적용; 적격대출은 AY 2025-26/2026-27에도 적용)",
+            "estimated": false,
+            "source": "PIB/중공업부, Year Ender 2019, Release ID 1597099; Income Tax Act §80EEB (Finance Act 2019)",
+            "quote": "Government has extended an additional income tax deduction of Rs 1.5 Lakh on interest paid on loans to the buyers of Electric Vehicle to buy EVs is provided.",
+            "note": "금융상품(EV 대출) 직접 연계 세제 혜택. 공제는 적격 대출기간 잔여 이자에 대해 적용."
+          },
+          "gst_on_ev": {
+            "value": "전기차 GST 5%(종전 12%→5%, 2019.8.1 시행, 현행 유지). EV 충전기/충전소 GST 18%→5%.",
+            "year": "2019 (effective 2019.8.1; 2025-2026 현행 유지)",
+            "estimated": false,
+            "source": "PIB/재무부(36th GST Council), Release ID 1580536(2019.7.27)",
+            "quote": "The GST rate on all electric vehicles be reduced from 12% to 5%. The GST rate on charger or charging stations for Electric vehicles be reduced from 18% to 5%. ... effective from 1st August, 2019.",
+            "note": "내연·대형차 대비 EV 구매 세부담 대폭 경감 → EV 대출 시뮬레이션 시 반영."
+          }
+        },
+
+        "lease": {
+          "label": "리스 (motor vehicle leasing)",
+          "term_limit": { "value": null, "status": "공식 자료에서 확인 불가", "year": 2025, "estimated": false, "source": null, "note": "리스 전용 기간 상한 공식 자료 미확보." },
+          "amount_ltv": { "value": null, "status": "공식 자료에서 확인 불가", "year": 2025, "estimated": false, "source": null, "note": "미확보." },
+          "tax_benefit": {
+            "gst_on_leasing_legacy": {
+              "value": "2017.7.1 이전 구매·리스 차량의 리스에는 적용 GST율의 65%(Compensation Cess 포함) 적용 — 22차 GST Council 결정, 2017.7.1부터 3년 한시.",
+              "year": "2017 (3년 한시: 2017.7.1~)",
+              "estimated": false,
+              "source": "PIB/재무부(22nd GST Council), Release ID 1505912(2017.10.12)",
+              "quote": "Leasing of vehicles purchased and leased prior to 1st July, 2017 would attract GST at a rate equal to 65% of the applicable GST rate (including Compensation Cess). ... for a period of three years with effect from 1st July, 2017.",
+              "note": "한시(3년) 경과분 — 현행 리스 GST율 자체는 별도 미검증(미확보). 참고용 legacy 규정."
+            }
+          }
+        },
+
+        "long_term_rental": {
+          "label": "장기렌트 (long-term rental)",
+          "status": "공식 자료에서 확인 불가",
+          "note": "인도 장기렌트 전용 금융·세제 규제를 공식 자료에서 확인하지 못함(미확보)."
+        }
+      }
+    }
+  ]
+}

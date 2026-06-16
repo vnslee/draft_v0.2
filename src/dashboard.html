@@ -1,0 +1,3887 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오토금융 해외진출 진단 콘솔</title>
+<style>
+  :root {
+    --ink: #16201c;
+    --ink-soft: #4a5550;
+    --paper: #f3f0e9;
+    --panel: #fbfaf6;
+    --line: #d8d3c6;
+    --line-soft: #e7e3d8;
+    --accent: #1f5c4a;
+    --accent-soft: #d9e7e0;
+    --signal: #c5562e;
+    --signal-soft: #f3ddd2;
+    --amber: #b88324;
+    --amber-soft: #f0e4cb;
+    --gold: #8a7a3f;
+    --green: #2d7a5f;
+    --green-soft: #d1e7dd;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  /* ===== Shell Layout ===== */
+  .app {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .nav {
+    width: 248px;
+    flex-shrink: 0;
+    background: var(--ink);
+    color: #cdd6d1;
+    padding: 26px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .brand {
+    padding: 0 24px 24px;
+    border-bottom: 1px solid #2a3531;
+  }
+
+  .brand h1 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.01em;
+    line-height: 1.3;
+  }
+
+  .brand .sub {
+    font-size: 11px;
+    color: #7c8a84;
+    margin-top: 6px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .nav-group {
+    padding: 18px 12px 6px 24px;
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #6b7771;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 24px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: #b6c0bb;
+    border-left: 2.5px solid transparent;
+    transition: all .12s;
+  }
+
+  .nav-item:hover {
+    background: #1c2723;
+    color: #fff;
+  }
+
+  .nav-item.active {
+    background: #1c2723;
+    color: #fff;
+    border-left-color: var(--accent);
+  }
+
+  .nav-item .code {
+    font-size: 10px;
+    color: #5f6b65;
+    width: 18px;
+  }
+
+  .nav-item.active .code {
+    color: var(--accent);
+  }
+
+  .main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    height: 56px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .crumb {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  .crumb b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .ruleset-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    background: var(--accent-soft);
+    border: 1px solid #bcd2c8;
+    padding: 4px 11px;
+    border-radius: 20px;
+  }
+
+  .ruleset-chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ===== Analysis Status Card (Top Right) ===== */
+  .analysis-status-wrapper {
+    position: fixed;
+    top: 70px;
+    right: 32px;
+    z-index: 30;
+    width: 320px;
+  }
+
+  .analysis-status-card {
+    background: white;
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(31, 92, 74, 0.15);
+    overflow: hidden;
+    animation: slideInRight 0.3s ease;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .analysis-status-header {
+    padding: 14px 16px;
+    background: var(--accent-soft);
+    border-bottom: 1px solid var(--accent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+
+  .analysis-status-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .analysis-status-flag {
+    font-size: 20px;
+  }
+
+  .analysis-status-toggle {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    transition: transform 0.3s;
+  }
+
+  .analysis-status-toggle.expanded {
+    transform: rotate(180deg);
+  }
+
+  .analysis-status-body {
+    padding: 16px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+
+  .analysis-status-body.expanded {
+    max-height: 350px;
+    padding-bottom: 20px;
+  }
+
+  .overall-progress {
+    margin-bottom: 16px;
+  }
+
+  .overall-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+    color: var(--ink-soft);
+  }
+
+  .overall-progress-value {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .progress-bar-container {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-bar-fill.completed {
+    background: var(--green);
+  }
+
+  .agent-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .agent-summary-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 6px 0;
+  }
+
+  .agent-summary-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .agent-status-icon {
+    font-size: 14px;
+  }
+
+  .agent-summary-progress {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .agent-summary-progress.completed {
+    color: var(--green);
+  }
+
+  .agent-summary-progress.waiting {
+    color: var(--ink-soft);
+  }
+
+  .detail-popup-btn {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  /* ===== Analysis Detail Modal ===== */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(22, 32, 28, 0.7);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-overlay.active {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal-content {
+    background: var(--panel);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 650px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s;
+  }
+
+  .modal-close:hover {
+    color: var(--ink);
+  }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  .modal-overall-progress {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--accent-soft);
+    border-radius: 8px;
+  }
+
+  .modal-progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .modal-progress-bar {
+    height: 12px;
+    background: var(--line-soft);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .modal-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 6px;
+    transition: width 0.5s ease;
+  }
+
+  .modal-progress-fill.completed {
+    background: var(--green);
+  }
+
+  .agent-detail-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .agent-detail-item {
+    padding: 16px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .agent-detail-item.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .agent-detail-item.completed {
+    border-color: var(--green);
+    background: var(--green-soft);
+  }
+
+  .agent-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .agent-detail-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .agent-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .agent-icon.completed {
+    color: var(--green);
+    font-size: 16px;
+  }
+
+  .agent-icon .spinner {
+    width: 16px;
+    height: 16px;
+  }
+
+  .agent-detail-status {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .agent-detail-status.running {
+    color: var(--accent);
+  }
+
+  .agent-detail-status.completed {
+    color: var(--green);
+  }
+
+  .agent-detail-status.waiting {
+    color: var(--ink-soft);
+  }
+
+  .agent-detail-progress {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .agent-detail-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .agent-detail-progress-fill.completed {
+    background: var(--green);
+  }
+
+  .agent-detail-message {
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-style: italic;
+  }
+
+  .modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .analysis-time {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .view-report-btn {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .view-report-btn.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .view {
+    padding: 32px;
+    max-width: 1180px;
+    display: none;
+  }
+
+  .view.active {
+    display: block;
+  }
+
+  h2.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+
+  .page-desc {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    margin-top: 6px;
+    margin-bottom: 26px;
+    max-width: 620px;
+  }
+
+  /* ===== Cards ===== */
+  .grid {
+    display: grid;
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+  }
+
+  .card-h {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  /* ===== S0 Dashboard ===== */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+
+  .stat .n {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -.02em;
+  }
+
+  .stat .l {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+
+  .map-container {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .legend-color.entered { background: var(--ink); }
+  .legend-color.transplantable { background: var(--green); }
+  .legend-color.investigate { background: var(--amber); }
+  .legend-color.blocked { background: var(--signal); }
+  .legend-color.unanalyzed { background: var(--line-soft); }
+
+  /* ===== World Map ===== */
+  .world-map {
+    width: 100%;
+    height: 400px;
+    position: relative;
+    background: #f8f9fa;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .world-map svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .country-marker {
+    cursor: pointer;
+    transition: all 0.2s;
+    stroke: white;
+    stroke-width: 1;
+  }
+
+  .country-marker:hover {
+    opacity: 0.8;
+    filter: brightness(1.1);
+  }
+
+  .country-marker.entered { fill: var(--ink); }
+  .country-marker.transplantable { fill: var(--green); }
+  .country-marker.investigate { fill: var(--amber); }
+  .country-marker.blocked { fill: var(--signal); }
+  .country-marker.unanalyzed { fill: var(--line-soft); }
+
+  .country-label {
+    pointer-events: none;
+    font-size: 10px;
+    fill: white;
+    font-weight: 600;
+  }
+
+  .map-tooltip {
+    position: absolute;
+    background: var(--ink);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  .map-tooltip.visible {
+    opacity: 1;
+  }
+
+  .country-detail {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 24px;
+  }
+
+  .country-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .country-flag {
+    font-size: 32px;
+  }
+
+  .country-info h3 {
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .country-region {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+  }
+
+  .status-badge.entered {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .status-badge.transplantable {
+    background: var(--green-soft);
+    color: var(--green);
+  }
+
+  .status-badge.investigate {
+    background: var(--amber-soft);
+    color: var(--amber);
+  }
+
+  .status-badge.blocked {
+    background: var(--signal-soft);
+    color: var(--signal);
+  }
+
+  .status-badge.unanalyzed {
+    background: var(--line-soft);
+    color: var(--ink-soft);
+  }
+
+  .recent-list {
+    margin-top: 16px;
+  }
+
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    cursor: pointer;
+    margin-bottom: 9px;
+    transition: all .12s;
+  }
+
+  .recent-item:hover {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  .recent-flag {
+    font-size: 20px;
+  }
+
+  .recent-meta {
+    flex: 1;
+  }
+
+  .recent-meta .title {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .recent-meta .subtitle {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* ===== Buttons ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .14s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #164437;
+  }
+
+  .btn-secondary {
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    background: #fff;
+  }
+
+  /* ===== S1 Single Country Diagnosis ===== */
+  .control-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .control-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-soft);
+  }
+
+  select, input[type="text"], input[type="number"] {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .result-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .score-display {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    margin-bottom: 24px;
+  }
+
+  .score-ring {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+
+  .score-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    font-weight: 700;
+  }
+
+  .score-details {
+    flex: 1;
+  }
+
+  .score-details h3 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .score-meta {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+
+  .category-bars {
+    margin-top: 24px;
+  }
+
+  .category-item {
+    margin-bottom: 20px;
+  }
+
+  .category-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .category-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .category-score {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .category-bar {
+    height: 8px;
+    background: var(--line-soft);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .category-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width .3s;
+  }
+
+  .category-bar-fill.high { background: var(--green); }
+  .category-bar-fill.medium { background: var(--amber); }
+  .category-bar-fill.low { background: var(--signal); }
+
+  .alert {
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .alert-danger {
+    background: var(--signal-soft);
+    border: 1px solid var(--signal);
+    color: var(--signal);
+  }
+
+  .alert-warning {
+    background: var(--amber-soft);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+  }
+
+  /* ===== S2 Regional Ranking ===== */
+  .ranking-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .ranking-table thead {
+    background: var(--line-soft);
+  }
+
+  .ranking-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .ranking-table td {
+    padding: 14px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  .ranking-table tbody tr {
+    cursor: pointer;
+    transition: background .12s;
+  }
+
+  .ranking-table tbody tr:hover {
+    background: var(--accent-soft);
+  }
+
+  .rank-cell {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .country-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .mini-bars {
+    display: flex;
+    gap: 4px;
+  }
+
+  .mini-bar {
+    width: 40px;
+    height: 6px;
+    border-radius: 3px;
+  }
+
+  /* ===== S3 Settings ===== */
+  .settings-section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .settings-section h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .slider-group {
+    margin-bottom: 20px;
+  }
+
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+
+  .slider-name {
+    font-weight: 600;
+  }
+
+  .slider-value {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--line-soft);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: none;
+  }
+
+  .toggle-group {
+    margin-bottom: 16px;
+  }
+
+  .toggle-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .toggle-info {
+    flex: 1;
+  }
+
+  .toggle-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .toggle-desc {
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: var(--line);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background .2s;
+  }
+
+  .toggle-switch.active {
+    background: var(--accent);
+  }
+
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    top: 3px;
+    left: 3px;
+    transition: left .2s;
+  }
+
+  .toggle-switch.active::after {
+    left: 23px;
+  }
+
+  .validation-msg {
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-top: 16px;
+  }
+
+  .validation-msg.success {
+    background: var(--green-soft);
+    color: var(--green);
+  }
+
+  .validation-msg.error {
+    background: var(--signal-soft);
+    color: var(--signal);
+  }
+
+  /* ===== S5 Data Management ===== */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .data-table thead {
+    background: var(--line-soft);
+  }
+
+  .data-table th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .data-table td {
+    padding: 14px 16px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+  }
+
+  .tier-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .tier-badge.t1 {
+    background: var(--green-soft);
+    color: var(--green);
+  }
+
+  .tier-badge.t2 {
+    background: var(--amber-soft);
+    color: var(--amber);
+  }
+
+  .tier-badge.t3 {
+    background: #f4e8d0;
+    color: var(--gold);
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 860px) {
+    .nav {
+      display: none;
+    }
+
+    .stat-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .control-row {
+      grid-template-columns: 1fr;
+    }
+
+    .score-display {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  /* ===== Utility ===== */
+  .mt-24 { margin-top: 24px; }
+  .mb-16 { margin-bottom: 16px; }
+  .text-center { text-align: center; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Left Navigation -->
+  <nav class="nav">
+    <div class="brand">
+      <h1>오토금융<br>해외진출 진단</h1>
+      <div class="sub">Entry Diagnostics</div>
+    </div>
+
+    <div class="nav-group">분석</div>
+    <div class="nav-item active" data-view="s0">
+      <span class="code">S0</span>
+      <span>대시보드</span>
+    </div>
+    <div class="nav-item" data-view="s1">
+      <span class="code">S1</span>
+      <span>단일 국가 진단</span>
+    </div>
+    <div class="nav-item" data-view="s2">
+      <span class="code">S2</span>
+      <span>권역 순위</span>
+    </div>
+
+    <div class="nav-group">관리</div>
+    <div class="nav-item" data-view="s3">
+      <span class="code">S3</span>
+      <span>설정 (가중치 & 판정)</span>
+    </div>
+    <div class="nav-item" data-view="s5">
+      <span class="code">S5</span>
+      <span>데이터 관리</span>
+    </div>
+
+    <div class="nav-group">산출물</div>
+    <div class="nav-item" data-view="s4">
+      <span class="code">S4</span>
+      <span>보고서 뷰어</span>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="crumb">
+        <span>분석</span> › <b id="currentViewName">대시보드</b>
+      </div>
+      <div class="ruleset-chip">
+        <span class="dot"></span>
+        <span id="currentRuleset">디폴트 v1</span>
+      </div>
+    </div>
+
+    <!-- Analysis Status Card (Fixed Top Right) -->
+    <div id="analysisStatusWrapper" class="analysis-status-wrapper" style="display: none;">
+      <div class="analysis-status-card">
+        <div class="analysis-status-header" onclick="toggleStatusCard()">
+          <div class="analysis-status-title">
+            <span class="analysis-status-flag" id="statusCardFlag">🇮🇳</span>
+            <span id="statusCardTitle">인도 분석 중...</span>
+          </div>
+          <button class="analysis-status-toggle" id="statusCardToggle">▼</button>
+        </div>
+        <div class="analysis-status-body" id="statusCardBody">
+          <div class="overall-progress">
+            <div class="overall-progress-label">
+              <span>전체 진행률</span>
+              <span class="overall-progress-value"><span id="statusOverallProgress">0</span>%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="statusOverallBar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="agent-summary-list">
+            <div class="agent-summary-item">
+              <div class="agent-summary-name">
+                <span class="agent-status-icon" id="iconMarket">⏳</span>
+                <span>시장</span>
+              </div>
+              <span class="agent-summary-progress" id="progressMarket">0%</span>
+            </div>
+            <div class="agent-summary-item">
+              <div class="agent-summary-name">
+                <span class="agent-status-icon" id="iconRegulation">⏳</span>
+                <span>규제</span>
+              </div>
+              <span class="agent-summary-progress" id="progressRegulation">0%</span>
+            </div>
+            <div class="agent-summary-item">
+              <div class="agent-summary-name">
+                <span class="agent-status-icon" id="iconEnvironment">⏳</span>
+                <span>환경</span>
+              </div>
+              <span class="agent-summary-progress" id="progressEnvironment">0%</span>
+            </div>
+            <div class="agent-summary-item">
+              <div class="agent-summary-name">
+                <span class="agent-status-icon" id="iconSystem">⏳</span>
+                <span>시스템</span>
+              </div>
+              <span class="agent-summary-progress" id="progressSystem">0%</span>
+            </div>
+            <div class="agent-summary-item">
+              <div class="agent-summary-name">
+                <span class="agent-status-icon" id="iconSummary">⏸</span>
+                <span>Summary</span>
+              </div>
+              <span class="agent-summary-progress waiting" id="progressSummary">대기 중</span>
+            </div>
+          </div>
+
+          <button class="btn btn-secondary detail-popup-btn" onclick="openAnalysisModal()">
+            상세 팝업 열기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Detail Modal -->
+    <div class="modal-overlay" id="analysisModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span id="modalFlag">🇮🇳</span>
+            <span id="modalTitle">인도 진출 진단 분석 중</span>
+          </div>
+          <button class="modal-close" onclick="closeAnalysisModal()">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-overall-progress">
+            <div class="modal-progress-label">
+              <span>전체 진행률</span>
+              <span><span id="modalOverallProgress">0</span>%</span>
+            </div>
+            <div class="modal-progress-bar">
+              <div class="modal-progress-fill" id="modalOverallBar" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="agent-detail-list">
+            <!-- Market Agent -->
+            <div class="agent-detail-item" id="detailMarket">
+              <div class="agent-detail-header">
+                <div class="agent-detail-name">
+                  <span class="agent-icon" id="iconDetailMarket">
+                    <span class="spinner"></span>
+                  </span>
+                  <span>시장 분석 (Market)</span>
+                </div>
+                <span class="agent-detail-status running" id="statusMarket">0%</span>
+              </div>
+              <div class="agent-detail-progress">
+                <div class="agent-detail-progress-fill" id="barMarket" style="width: 0%;"></div>
+              </div>
+              <div class="agent-detail-message" id="messageMarket">
+                침투율, 차량가격, 시장규모 분석 중...
+              </div>
+            </div>
+
+            <!-- Regulation Agent -->
+            <div class="agent-detail-item" id="detailRegulation">
+              <div class="agent-detail-header">
+                <div class="agent-detail-name">
+                  <span class="agent-icon" id="iconDetailRegulation">
+                    <span class="spinner"></span>
+                  </span>
+                  <span>규제 분석 (Regulation)</span>
+                </div>
+                <span class="agent-detail-status running" id="statusRegulation">0%</span>
+              </div>
+              <div class="agent-detail-progress">
+                <div class="agent-detail-progress-fill" id="barRegulation" style="width: 0%;"></div>
+              </div>
+              <div class="agent-detail-message" id="messageRegulation">
+                외국인 지분, 라이선스 요건 조사 중...
+              </div>
+            </div>
+
+            <!-- Environment Agent -->
+            <div class="agent-detail-item" id="detailEnvironment">
+              <div class="agent-detail-header">
+                <div class="agent-detail-name">
+                  <span class="agent-icon" id="iconDetailEnvironment">
+                    <span class="spinner"></span>
+                  </span>
+                  <span>금융환경 분석 (Financial Environment)</span>
+                </div>
+                <span class="agent-detail-status running" id="statusEnvironment">0%</span>
+              </div>
+              <div class="agent-detail-progress">
+                <div class="agent-detail-progress-fill" id="barEnvironment" style="width: 0%;"></div>
+              </div>
+              <div class="agent-detail-message" id="messageEnvironment">
+                금리, LTV, 캡티브 강도 데이터 수집 중...
+              </div>
+            </div>
+
+            <!-- System Agent -->
+            <div class="agent-detail-item" id="detailSystem">
+              <div class="agent-detail-header">
+                <div class="agent-detail-name">
+                  <span class="agent-icon" id="iconDetailSystem">
+                    <span class="spinner"></span>
+                  </span>
+                  <span>시스템 분석 (System)</span>
+                </div>
+                <span class="agent-detail-status running" id="statusSystem">0%</span>
+              </div>
+              <div class="agent-detail-progress">
+                <div class="agent-detail-progress-fill" id="barSystem" style="width: 0%;"></div>
+              </div>
+              <div class="agent-detail-message" id="messageSystem">
+                코어시스템, 디지털 성숙도 평가 중...
+              </div>
+            </div>
+
+            <!-- Summary Agent -->
+            <div class="agent-detail-item" id="detailSummary">
+              <div class="agent-detail-header">
+                <div class="agent-detail-name">
+                  <span class="agent-icon" id="iconDetailSummary">⏸</span>
+                  <span>데이터 취합 & Summary</span>
+                </div>
+                <span class="agent-detail-status waiting" id="statusSummary">대기 중</span>
+              </div>
+              <div class="agent-detail-progress">
+                <div class="agent-detail-progress-fill" id="barSummary" style="width: 0%;"></div>
+              </div>
+              <div class="agent-detail-message" id="messageSummary">
+                모든 에이전트 완료 후 시작됩니다.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <div class="analysis-time" id="analysisTime">
+            소요 시간: 계산 중...
+          </div>
+          <button class="btn btn-primary view-report-btn" id="viewReportBtn" onclick="viewReport()">
+            보고서 보기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S0: Dashboard -->
+    <div id="s0" class="view active">
+      <h2 class="page-title">진출 진단 대시보드</h2>
+      <p class="page-desc">진출국과 미진출국 현황을 세계지도와 요약 지표로 한눈에 조망합니다.</p>
+
+      <!-- Summary Statistics -->
+      <div class="stat-row">
+        <div class="stat">
+          <div class="n">7</div>
+          <div class="l">진출국 수</div>
+        </div>
+        <div class="stat">
+          <div class="n">3</div>
+          <div class="l">분석 권역 수</div>
+        </div>
+        <div class="stat">
+          <div class="n">13</div>
+          <div class="l">조사 완료 국가</div>
+        </div>
+        <div class="stat">
+          <div class="n">8</div>
+          <div class="l">생성된 보고서</div>
+        </div>
+      </div>
+
+      <!-- World Map -->
+      <div class="map-container">
+        <div class="card-h">세계 진출 현황 지도</div>
+        <div class="world-map" id="worldMap">
+          <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background -->
+            <rect width="1000" height="500" fill="#e8f0f5"/>
+
+            <!-- 아시아·태평양 권역 -->
+            <!-- 한국 (진출국) -->
+            <circle cx="780" cy="200" r="25" class="country-marker entered" data-country="korea" data-status="entered"/>
+            <text x="780" y="205" class="country-label" text-anchor="middle">KR</text>
+
+            <!-- 인도 (이식 가능) -->
+            <circle cx="650" cy="230" r="30" class="country-marker transplantable" data-country="india" data-status="transplantable"/>
+            <text x="650" y="235" class="country-label" text-anchor="middle">IN</text>
+
+            <!-- 인도네시아 (심층조사) -->
+            <circle cx="720" cy="280" r="25" class="country-marker investigate" data-country="indonesia" data-status="investigate"/>
+            <text x="720" y="285" class="country-label" text-anchor="middle">ID</text>
+
+            <!-- 호주 (진출국) -->
+            <circle cx="820" cy="380" r="28" class="country-marker entered" data-country="australia" data-status="entered"/>
+            <text x="820" y="385" class="country-label" text-anchor="middle">AU</text>
+
+            <!-- 중국 (진출국) -->
+            <circle cx="730" cy="180" r="32" class="country-marker entered" data-country="china" data-status="entered"/>
+            <text x="730" y="185" class="country-label" text-anchor="middle">CN</text>
+
+            <!-- 유럽 권역 -->
+            <!-- 독일 (진출국) -->
+            <circle cx="480" cy="140" r="26" class="country-marker entered" data-country="germany" data-status="entered"/>
+            <text x="480" y="145" class="country-label" text-anchor="middle">DE</text>
+
+            <!-- 영국 (이식 가능) -->
+            <circle cx="440" cy="130" r="24" class="country-marker transplantable" data-country="uk" data-status="transplantable"/>
+            <text x="440" y="135" class="country-label" text-anchor="middle">UK</text>
+
+            <!-- 스페인 (이식 가능) -->
+            <circle cx="450" cy="180" r="24" class="country-marker transplantable" data-country="spain" data-status="transplantable"/>
+            <text x="450" y="185" class="country-label" text-anchor="middle">ES</text>
+
+            <!-- 폴란드 (심층조사) -->
+            <circle cx="510" cy="140" r="22" class="country-marker investigate" data-country="poland" data-status="investigate"/>
+            <text x="510" y="145" class="country-label" text-anchor="middle">PL</text>
+
+            <!-- 러시아 (진출국) -->
+            <circle cx="580" cy="110" r="35" class="country-marker entered" data-country="russia" data-status="entered"/>
+            <text x="580" y="115" class="country-label" text-anchor="middle">RU</text>
+
+            <!-- 미주 권역 -->
+            <!-- 미국 (진출국) -->
+            <circle cx="200" cy="180" r="32" class="country-marker entered" data-country="usa" data-status="entered"/>
+            <text x="200" y="185" class="country-label" text-anchor="middle">US</text>
+
+            <!-- 캐나다 (진출국) -->
+            <circle cx="180" cy="120" r="30" class="country-marker entered" data-country="canada" data-status="entered"/>
+            <text x="180" y="125" class="country-label" text-anchor="middle">CA</text>
+
+            <!-- 멕시코 (심층조사) -->
+            <circle cx="160" cy="240" r="26" class="country-marker investigate" data-country="mexico" data-status="investigate"/>
+            <text x="160" y="245" class="country-label" text-anchor="middle">MX</text>
+
+            <!-- Region Labels -->
+            <text x="200" y="50" style="font-size: 14px; fill: var(--ink-soft); font-weight: 600;">미주</text>
+            <text x="480" y="50" style="font-size: 14px; fill: var(--ink-soft); font-weight: 600;">유럽</text>
+            <text x="720" y="50" style="font-size: 14px; fill: var(--ink-soft); font-weight: 600;">아시아·태평양</text>
+          </svg>
+
+          <!-- Tooltip -->
+          <div class="map-tooltip" id="mapTooltip"></div>
+        </div>
+
+        <div class="map-legend">
+          <div class="legend-item">
+            <div class="legend-color entered"></div>
+            <span>진출국</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color transplantable"></div>
+            <span>이식 가능</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color investigate"></div>
+            <span>심층조사</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color blocked"></div>
+            <span>차단 (킬스위치)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color unanalyzed"></div>
+            <span>미조사</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Country Detail Card -->
+      <div class="country-detail" id="countryDetail">
+        <div class="country-header">
+          <div class="country-flag">🇰🇷</div>
+          <div class="country-info">
+            <h3>한국</h3>
+            <div class="country-region">아시아·태평양</div>
+          </div>
+          <span class="status-badge entered">진출</span>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; margin-top: 16px;">
+          <div>
+            <div class="form-label">진출 시점</div>
+            <div style="font-size: 14px; margin-top: 4px;">본사 소재국</div>
+          </div>
+          <div>
+            <div class="form-label">진출 비용</div>
+            <div style="font-size: 14px; margin-top: 4px;">$1,300,000</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <button class="btn btn-secondary" onclick="navigate('s5')">실적 데이터 보기</button>
+        </div>
+      </div>
+
+      <!-- Recent Analysis -->
+      <div class="card mt-24">
+        <div class="card-h">최근 분석</div>
+        <div class="recent-list">
+          <div class="recent-item" onclick="navigate('s4')">
+            <div class="recent-flag">🇮🇳</div>
+            <div class="recent-meta">
+              <div class="title">인도 진단 보고서</div>
+              <div class="subtitle">2025-06-15 · 이식 가능 (74점)</div>
+            </div>
+            <span class="status-badge transplantable">이식 가능</span>
+          </div>
+
+          <div class="recent-item" onclick="navigate('s4')">
+            <div class="recent-flag">🇲🇽</div>
+            <div class="recent-meta">
+              <div class="title">멕시코 진단 보고서</div>
+              <div class="subtitle">2025-06-14 · 심층조사 (62점)</div>
+            </div>
+            <span class="status-badge investigate">심층조사</span>
+          </div>
+
+          <div class="recent-item" onclick="navigate('s4')">
+            <div class="recent-flag">🇪🇸</div>
+            <div class="recent-meta">
+              <div class="title">스페인 진단 보고서</div>
+              <div class="subtitle">2025-06-13 · 이식 가능 (81점)</div>
+            </div>
+            <span class="status-badge transplantable">이식 가능</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S1: Single Country Diagnosis -->
+    <div id="s1" class="view">
+      <h2 class="page-title">단일 국가 진단</h2>
+      <p class="page-desc">선택한 대상국을 같은 권역의 진출국과 비교해 유사도를 산출하고 진출 가능성을 판정합니다.</p>
+
+      <!-- Control Panel -->
+      <div class="control-panel">
+        <div class="control-row">
+          <div class="form-group">
+            <label class="form-label">대상 국가</label>
+            <select id="targetCountry">
+              <option value="">국가를 선택하세요</option>
+              <option value="india">🇮🇳 인도</option>
+              <option value="indonesia">🇮🇩 인도네시아</option>
+              <option value="mexico">🇲🇽 멕시코</option>
+              <option value="spain">🇪🇸 스페인</option>
+              <option value="uk">🇬🇧 영국</option>
+              <option value="poland">🇵🇱 폴란드</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">비교 기준</label>
+            <select id="comparisonBasis">
+              <option value="best">권역 내 최고 유사 진출국</option>
+              <option value="average">전체 진출국 평균</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="runDiagnosis()">진단 실행</button>
+      </div>
+
+      <!-- Alert Messages (hidden by default) -->
+      <div id="alertKillswitch" class="alert alert-danger hidden">
+        ⚠️ <strong>킬스위치 작동:</strong> 외환 송금 규제로 인해 진출이 차단되었습니다.
+      </div>
+
+      <div id="alertGate" class="alert alert-warning hidden">
+        ⚠️ <strong>시스템 게이트 미충족:</strong> 코어 시스템 유사도가 기준 미만입니다.
+      </div>
+
+      <!-- Result Panel -->
+      <div class="result-panel" id="resultPanel" style="display: none;">
+        <div class="score-display">
+          <div class="score-ring">
+            <svg width="140" height="140">
+              <circle cx="70" cy="70" r="60" fill="none" stroke="var(--line-soft)" stroke-width="12"/>
+              <circle id="scoreCircle" cx="70" cy="70" r="60" fill="none" stroke="var(--accent)" stroke-width="12"
+                      stroke-dasharray="377" stroke-dashoffset="94" transform="rotate(-90 70 70)"
+                      style="transition: stroke-dashoffset 0.5s;"/>
+            </svg>
+            <div class="score-value" id="scoreValue">74</div>
+          </div>
+
+          <div class="score-details">
+            <h3>인도</h3>
+            <div class="score-meta"><strong>비교국:</strong> 한국 (진출국)</div>
+            <div class="score-meta"><strong>권역:</strong> 아시아·태평양</div>
+            <div class="score-meta" style="margin-top: 12px;">
+              <span class="status-badge transplantable">이식 가능</span>
+            </div>
+
+            <div style="margin-top: 16px; padding: 12px; background: var(--accent-soft); border-radius: 6px;">
+              <div style="font-size: 12px; color: var(--ink-soft); margin-bottom: 4px;">추정 진출 비용</div>
+              <div style="font-size: 20px; font-weight: 700; color: var(--accent);">$1,560,000</div>
+              <div style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">
+                한국 대비 120% · 예상 절감률 -20%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- License Information -->
+        <div style="margin-bottom: 24px; padding: 16px; background: var(--line-soft); border-radius: 8px;">
+          <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 12px;">
+            필요 라이선스 요약
+          </div>
+          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">라이선스명</div>
+              <div style="font-size: 13px; font-weight: 600;">NBFC-ICC 등록</div>
+              <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+                (Investment and Credit Company)
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">최소 자본금 요건</div>
+              <div style="font-size: 13px; font-weight: 600; color: var(--signal);">NOF ₹10 crore</div>
+              <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+                (약 $1.2M USD)
+              </div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">발급기관</div>
+              <div style="font-size: 13px;">Reserve Bank of India</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">주요 제약</div>
+              <div style="font-size: 13px;">외국인 지분 한도 49%</div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft);">
+            💡 상세 내용은 <a href="#" onclick="navigate('s4'); return false;" style="color: var(--accent); text-decoration: underline;">근거 보고서 섹션 5</a>에서 확인하세요.
+          </div>
+        </div>
+
+        <!-- Category Bars -->
+        <div class="category-bars">
+          <div class="card-h">카테고리별 유사도</div>
+
+          <div class="category-item">
+            <div class="category-header">
+              <span class="category-name">시장 (가중치 30%)</span>
+              <span class="category-score">78점</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill high" style="width: 78%;"></div>
+            </div>
+          </div>
+
+          <div class="category-item">
+            <div class="category-header">
+              <span class="category-name">규제 (가중치 25%)</span>
+              <span class="category-score">72점</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill high" style="width: 72%;"></div>
+            </div>
+          </div>
+
+          <div class="category-item">
+            <div class="category-header">
+              <span class="category-name">환경(금융) (가중치 20%)</span>
+              <span class="category-score">69점</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill medium" style="width: 69%;"></div>
+            </div>
+          </div>
+
+          <div class="category-item">
+            <div class="category-header">
+              <span class="category-name">시스템 (가중치 25%) · 게이트 기준선</span>
+              <span class="category-score">76점</span>
+            </div>
+            <div class="category-bar">
+              <div class="category-bar-fill high" style="width: 76%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 12px;">
+          <button class="btn btn-primary" onclick="navigate('s4')">근거 보고서 보기</button>
+          <button class="btn btn-secondary" onclick="navigate('s3')">가중치 바꿔 재실행</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2: Regional Ranking -->
+    <div id="s2" class="view">
+      <h2 class="page-title">권역 진출 우선순위</h2>
+      <p class="page-desc">선택한 권역의 미진출 국가 전체를 진단해 진출 점수 순으로 정렬합니다.</p>
+
+      <div class="control-panel">
+        <div class="form-group">
+          <label class="form-label">분석 권역</label>
+          <select id="regionSelect" onchange="calculateRanking()">
+            <option value="asia">아시아·태평양</option>
+            <option value="europe">유럽</option>
+            <option value="americas">미주</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="calculateRanking()">순위 산출</button>
+      </div>
+
+      <table class="ranking-table" style="margin-top: 24px;">
+        <thead>
+          <tr>
+            <th style="width: 60px;">순위</th>
+            <th>국가</th>
+            <th style="width: 100px;">종합점수</th>
+            <th style="width: 200px;">카테고리</th>
+            <th style="width: 120px;">판정</th>
+          </tr>
+        </thead>
+        <tbody id="rankingTableBody">
+          <tr onclick="navigate('s1')">
+            <td class="rank-cell">1</td>
+            <td>
+              <div class="country-cell">
+                <span style="font-size: 20px;">🇮🇳</span>
+                <span>인도</span>
+              </div>
+            </td>
+            <td><strong style="color: var(--green);">74</strong></td>
+            <td>
+              <div class="mini-bars">
+                <div class="mini-bar" style="background: var(--green);" title="시장: 78"></div>
+                <div class="mini-bar" style="background: var(--green);" title="규제: 72"></div>
+                <div class="mini-bar" style="background: var(--amber);" title="환경: 69"></div>
+                <div class="mini-bar" style="background: var(--green);" title="시스템: 76"></div>
+              </div>
+            </td>
+            <td><span class="status-badge transplantable">이식 가능</span></td>
+          </tr>
+
+          <tr onclick="navigate('s1')">
+            <td class="rank-cell">2</td>
+            <td>
+              <div class="country-cell">
+                <span style="font-size: 20px;">🇮🇩</span>
+                <span>인도네시아</span>
+              </div>
+            </td>
+            <td><strong style="color: var(--amber);">68</strong></td>
+            <td>
+              <div class="mini-bars">
+                <div class="mini-bar" style="background: var(--green);" title="시장: 71"></div>
+                <div class="mini-bar" style="background: var(--amber);" title="규제: 65"></div>
+                <div class="mini-bar" style="background: var(--amber);" title="환경: 67"></div>
+                <div class="mini-bar" style="background: var(--green);" title="시스템: 70"></div>
+              </div>
+            </td>
+            <td><span class="status-badge investigate">심층조사</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size: 12px; color: var(--ink-soft); margin-top: 12px;">
+        * 점수는 현재 적용 중인 가중치 룰셋(디폴트 v1) 기준입니다.
+      </p>
+    </div>
+
+    <!-- S3: Settings -->
+    <div id="s3" class="view">
+      <h2 class="page-title">설정 (가중치 & 판정 기준)</h2>
+      <p class="page-desc">카테고리 가중치, 임계값, 신뢰도 계수, 규제 킬스위치를 조정합니다.</p>
+
+      <!-- Category Weights -->
+      <div class="settings-section">
+        <h3>카테고리 가중치</h3>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">시장</span>
+            <span class="slider-value"><span id="weightMarket">30</span>%</span>
+          </div>
+          <input type="range" id="sliderMarket" min="0" max="100" value="30" oninput="updateWeights()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">규제</span>
+            <span class="slider-value"><span id="weightRegulation">25</span>%</span>
+          </div>
+          <input type="range" id="sliderRegulation" min="0" max="100" value="25" oninput="updateWeights()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">환경 (금융)</span>
+            <span class="slider-value"><span id="weightEnvironment">20</span>%</span>
+          </div>
+          <input type="range" id="sliderEnvironment" min="0" max="100" value="20" oninput="updateWeights()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">시스템</span>
+            <span class="slider-value"><span id="weightSystem">25</span>%</span>
+          </div>
+          <input type="range" id="sliderSystem" min="0" max="100" value="25" oninput="updateWeights()">
+        </div>
+
+        <div id="weightValidation" class="validation-msg success">
+          ✓ 가중치 합계: <strong id="weightSum">100</strong>%
+        </div>
+      </div>
+
+      <!-- Thresholds -->
+      <div class="settings-section">
+        <h3>임계값</h3>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">이식 임계값</span>
+            <span class="slider-value"><span id="thresholdTransplant">70</span>점</span>
+          </div>
+          <input type="range" id="sliderTransplant" min="50" max="90" value="70" oninput="updateThresholds()">
+          <p style="font-size: 12px; color: var(--ink-soft); margin-top: 6px;">
+            이식 가능 판정 기준 점수
+          </p>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">시스템 게이트 임계값</span>
+            <span class="slider-value"><span id="thresholdGate">60</span>점</span>
+          </div>
+          <input type="range" id="sliderGate" min="40" max="80" value="60" oninput="updateThresholds()">
+          <p style="font-size: 12px; color: var(--ink-soft); margin-top: 6px;">
+            코어 시스템 이식 가능 최소 점수
+          </p>
+        </div>
+      </div>
+
+      <!-- Reliability Coefficients -->
+      <div class="settings-section">
+        <h3>출처 신뢰도 계수</h3>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">Tier 1 (공식 1차)</span>
+            <span class="slider-value">1.0 (고정)</span>
+          </div>
+          <input type="range" min="100" max="100" value="100" disabled style="opacity: 0.5;">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">Tier 2 (준공식)</span>
+            <span class="slider-value"><span id="coeffTier2">0.9</span></span>
+          </div>
+          <input type="range" id="sliderTier2" min="70" max="100" value="90" oninput="updateCoeff()">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span class="slider-name">Tier 3 (참고)</span>
+            <span class="slider-value"><span id="coeffTier3">0.7</span></span>
+          </div>
+          <input type="range" id="sliderTier3" min="50" max="90" value="70" oninput="updateCoeff()">
+        </div>
+      </div>
+
+      <!-- Killswitches -->
+      <div class="settings-section">
+        <h3>규제 킬스위치</h3>
+        <p style="font-size: 12px; color: var(--ink-soft); margin-bottom: 16px;">
+          활성화된 항목이 불충족 시 점수와 무관하게 진출 차단 판정
+        </p>
+
+        <div class="toggle-group">
+          <div class="toggle-item">
+            <div class="toggle-info">
+              <div class="toggle-name">외국인 지분 한도</div>
+              <div class="toggle-desc">사업모델 허용 가능한 지분 제한 여부</div>
+            </div>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-info">
+              <div class="toggle-name">외환 송금 규제</div>
+              <div class="toggle-desc">본사 자금 회수 가능 여부</div>
+            </div>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-info">
+              <div class="toggle-name">배당 송금 제한</div>
+              <div class="toggle-desc">이익 본국 송환 제한 여부</div>
+            </div>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-info">
+              <div class="toggle-name">데이터 현지화 의무</div>
+              <div class="toggle-desc">시스템 구축 비용 직결</div>
+            </div>
+            <div class="toggle-switch" onclick="toggleSwitch(this)"></div>
+          </div>
+
+          <div class="toggle-item">
+            <div class="toggle-info">
+              <div class="toggle-name">금리 상한(우수라)</div>
+              <div class="toggle-desc">사업 수익성 직결</div>
+            </div>
+            <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Buttons -->
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button class="btn btn-primary" onclick="saveRuleset()">새 룰셋으로 저장</button>
+        <button class="btn btn-secondary" onclick="saveAndReanalyze()">저장 후 재분석</button>
+      </div>
+    </div>
+
+    <!-- S4: Report Viewer -->
+    <div id="s4" class="view">
+      <h2 class="page-title">근거 보고서</h2>
+      <p class="page-desc">단일 진단 결과의 판정 근거를 상세하게 제시합니다.</p>
+
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 24px;">
+          <div>
+            <div style="font-size: 12px; color: var(--ink-soft); margin-bottom: 4px;">보고서 ID</div>
+            <div style="font-size: 18px; font-weight: 600;">RPT-2025-0615-001</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" onclick="navigate('s1')">원본 분석으로</button>
+            <button class="btn btn-secondary" onclick="navigate('s3')">이 보고서 가중치로 재실행</button>
+          </div>
+        </div>
+
+        <!-- Report Header -->
+        <div style="padding: 20px; background: var(--line-soft); border-radius: 8px; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <span style="font-size: 32px;">🇮🇳</span>
+            <div>
+              <h3 style="font-size: 20px; font-weight: 600;">인도 진출 진단 보고서</h3>
+              <div style="font-size: 13px; color: var(--ink-soft); margin-top: 4px;">
+                권역: 아시아·태평양 · 비교국: 한국
+              </div>
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns: repeat(3, 1fr); gap: 12px;">
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft);">대상국 조사일</div>
+              <div style="font-size: 13px; font-weight: 600; margin-top: 2px;">2025-06-10</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft);">비교국 스냅샷</div>
+              <div style="font-size: 13px; font-weight: 600; margin-top: 2px;">2020-03 (진출준비시점)</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--ink-soft);">적용 룰셋</div>
+              <div style="font-size: 13px; font-weight: 600; margin-top: 2px;">디폴트 v1</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Navigation -->
+        <div style="margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--line);">
+          <div style="font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 12px;">
+            섹션 바로가기
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <a href="#section1" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">1. 경영 요약</a>
+            <a href="#section2" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">2. AI 인사이트</a>
+            <a href="#section3" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">3. 판정 근거</a>
+            <a href="#section4" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">4. 검증 로그</a>
+            <a href="#section5" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">5. 라이선스</a>
+            <a href="#section6" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">6. 카테고리 분석</a>
+            <a href="#section7" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">7. 비용 추정</a>
+            <a href="#section8" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">8. 리스크</a>
+            <a href="#section9" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">9. 출처 & 방법론</a>
+          </div>
+        </div>
+
+        <!-- Section 1: Executive Summary -->
+        <div id="section1" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">1. 경영 요약</h3>
+
+          <div style="padding: 16px; background: var(--green-soft); border-left: 4px solid var(--green); border-radius: 6px; margin-bottom: 16px;">
+            <div style="font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 8px;">
+              ✓ 이식 가능 (Transplantable)
+            </div>
+            <div style="font-size: 13px; color: var(--ink);">
+              종합 유사도 <strong>74점</strong>으로 이식 임계값(70점)을 충족하며, 킬스위치 및 시스템 게이트를 통과했습니다.
+            </div>
+          </div>
+
+          <div class="grid" style="grid-template-columns: repeat(2, 1fr); gap: 16px;">
+            <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;">
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px;">
+                추정 진출 비용
+              </div>
+              <div style="font-size: 24px; font-weight: 700; color: var(--accent);">$1,560,000</div>
+              <div style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">
+                한국(비교국) 대비 120%
+              </div>
+            </div>
+
+            <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;">
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); margin-bottom: 6px;">
+                데이터 신뢰도
+              </div>
+              <div style="font-size: 24px; font-weight: 700;">B+</div>
+              <div style="font-size: 12px; color: var(--ink-soft); margin-top: 4px;">
+                공식출처(T1) 비율 78%
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: AI Insights -->
+        <div id="section2" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">2. AI 인사이트</h3>
+
+          <div style="padding: 16px; background: var(--line-soft); border-radius: 8px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 8px;">핵심 판단</div>
+            <div style="font-size: 13px; line-height: 1.7;">
+              인도는 시장 규모와 성장성 측면에서 높은 유사도를 보이며, 규제 환경도 비교적 우호적입니다.
+              디지털 결제 인프라가 발달해 있어 시스템 이식 가능성이 높습니다.
+            </div>
+          </div>
+
+          <div style="padding: 16px; background: var(--amber-soft); border-radius: 8px; margin-bottom: 12px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 8px;">주의 지점</div>
+            <div style="font-size: 13px; line-height: 1.7;">
+              외환 변동성과 지역별 규제 차이에 유의해야 합니다.
+              현지 파트너십 구축이 성공의 핵심 요소가 될 것으로 예상됩니다.
+            </div>
+          </div>
+
+          <div style="padding: 16px; background: var(--line-soft); border-radius: 8px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 8px;">시점 리스크</div>
+            <div style="font-size: 13px; line-height: 1.7;">
+              비교국(한국) 데이터는 2020년 진출준비시점 기준이며, 대상국(인도)는 2025년 현행 기준입니다.
+              5년의 시점 격차가 존재하므로 최근 규제 변화를 재확인하시기 바랍니다.
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Scoring Logic -->
+        <div id="section3" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">3. 판정 근거 (점수 산출)</h3>
+
+          <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-family: monospace; font-size: 12px;">
+            <div style="margin-bottom: 8px;">종합 점수 = Σ(카테고리 점수 × 가중치 × 신뢰도 계수)</div>
+            <div style="margin-bottom: 8px; padding-left: 20px;">
+              = (78 × 0.30 × 1.0) + (72 × 0.25 × 0.95) + (69 × 0.20 × 0.90) + (76 × 0.25 × 1.0)
+            </div>
+            <div style="padding-left: 20px; font-weight: 700; color: var(--accent);">
+              = 23.4 + 17.1 + 12.4 + 19.0 = 71.9 ≈ 74점
+            </div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line);">
+              판정: 74점 ≥ 이식 임계값(70점) → <strong style="color: var(--green);">이식 가능</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Verification Log -->
+        <div id="section4" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">4. 킬스위치 & 게이트 검증 로그</h3>
+
+          <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-family: monospace; font-size: 12px;">
+            <div style="margin-bottom: 12px;">
+              <strong>STEP 1:</strong> 규제 킬스위치 검증
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 8px; color: var(--green);">
+              ✓ 외국인 지분 한도: PASS (49% 제한, 진출 가능)
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 8px; color: var(--green);">
+              ✓ 외환 송금 규제: PASS (FEMA 준수 시 송환 가능)
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 8px; color: var(--green);">
+              ✓ 배당 송금 제한: PASS (제한 없음)
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 8px; color: var(--green);">
+              ✓ 데이터 현지화 의무: PASS (비활성화)
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 16px; color: var(--green);">
+              ✓ 금리 상한: PASS (NBFC는 RBI 제한 없음)
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <strong>STEP 2:</strong> 시스템 게이트 검증
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 16px; color: var(--green);">
+              ✓ 시스템 유사도 76점 ≥ 게이트 임계값(60점) → PASS
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <strong>STEP 3:</strong> 종합 점수 임계 비교
+            </div>
+            <div style="padding-left: 20px; margin-bottom: 8px; color: var(--green);">
+              ✓ 종합 점수 74점 ≥ 이식 임계값(70점) → PASS
+            </div>
+
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-weight: 700; color: var(--green);">
+              최종 판정: 이식 가능 (Transplantable)
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 5: License Requirements -->
+        <div id="section5" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">5. 라이선스 & 인가 요건</h3>
+
+          <div style="padding: 20px; background: var(--amber-soft); border-left: 4px solid var(--amber); border-radius: 6px; margin-bottom: 20px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 6px;">
+              ⚠️ 주의사항
+            </div>
+            <div style="font-size: 13px; color: var(--ink);">
+              비교국(한국)과 대상국(인도)은 라이선스 구조가 다릅니다. 진출 전 현지 법무 자문을 받으시기 바랍니다.
+            </div>
+          </div>
+
+          <!-- Target Country License (India) -->
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <span style="font-size: 24px;">🇮🇳</span>
+              <h4 style="font-size: 16px; font-weight: 600;">인도 (대상국) - 필요 라이선스</h4>
+            </div>
+
+            <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px;">
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">라이선스명</div>
+                <div style="font-size: 13px;">
+                  <strong>NBFC 등록 (Certificate of Registration)</strong><br>
+                  <span style="font-size: 12px; color: var(--ink-soft);">
+                    여신·리스·할부 = NBFC-ICC (Investment and Credit Company)<br>
+                    팩토링 = NBFC-Factor
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">발급·감독기관</div>
+                <div style="font-size: 13px;">Reserve Bank of India (RBI)</div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">근거 법령</div>
+                <div style="font-size: 13px;">
+                  Reserve Bank of India Act, 1934 제45-IA조; NBFC Master Directions
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">자본금 요건</div>
+                <div style="font-size: 13px;">
+                  <div style="padding: 10px; background: var(--signal-soft); border-radius: 6px; margin-bottom: 8px;">
+                    <strong style="color: var(--signal);">NBFC-ICC 신규: NOF ₹10 crore (약 $1.2M)</strong><br>
+                    <span style="font-size: 12px; color: var(--ink-soft);">
+                      기존 NBFC 단계적 상향: ₹5cr(2025.3.31) → ₹10cr(2027.3.31)
+                    </span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--ink-soft); font-style: italic;">
+                    NOF = Net Owned Fund (납입자본금 + 자유적립금 − 누적손실·무형자산 등)
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">발급 절차</div>
+                <div style="font-size: 13px;">
+                  온라인 포털(COSMOS) 신청 후 인증서·서류 제출.<br>
+                  회사 설립·NOF 충족·적격경영진(fit and proper) 심사 후 RBI가 Certificate of Registration 발급.
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 12px; background: var(--line-soft); border-radius: 6px; font-size: 12px; color: var(--ink-soft);">
+              <strong>출처:</strong> RBI — NBFC FAQs, Master Direction for NBFC (rbi.org.in) ·
+              <span class="tier-badge t1">T1 공식출처</span>
+            </div>
+          </div>
+
+          <!-- Comparison Country License (Korea) -->
+          <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+              <span style="font-size: 24px;">🇰🇷</span>
+              <h4 style="font-size: 16px; font-weight: 600;">한국 (비교국 참고) - 라이선스 구조</h4>
+            </div>
+
+            <div style="padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; margin-bottom: 12px;">
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">라이선스명</div>
+                <div style="font-size: 13px;">
+                  <strong>여신전문금융업 인가</strong><br>
+                  <span style="font-size: 12px; color: var(--ink-soft);">
+                    • 신용카드업: 허가제<br>
+                    • 시설대여업(리스)·할부금융업·신기술사업금융업: 등록제
+                  </span>
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">발급·감독기관</div>
+                <div style="font-size: 13px;">금융위원회(허가·등록), 금융감독원(감독·검사)</div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px; margin-bottom: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">근거 법령</div>
+                <div style="font-size: 13px;">여신전문금융업법 제3조(허가 등)·제5조(자본금)</div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 140px 1fr; gap: 12px;">
+                <div style="font-size: 12px; font-weight: 600; color: var(--ink-soft);">자본금 요건</div>
+                <div style="font-size: 13px;">
+                  <strong>신기술사업금융업: 100억원 이상</strong> (2024년 200억→100억 완화)<br>
+                  <span style="font-size: 12px; color: var(--ink-soft);">
+                    리스·할부금융업 자본금: 미확보 (법령정보센터 조회 제한)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style="padding: 12px; background: var(--line-soft); border-radius: 6px; font-size: 12px; color: var(--ink-soft);">
+              <strong>출처:</strong> 여신전문금융업법 — 국가법령정보센터 (law.go.kr), 금융위 보도자료 ·
+              <span class="tier-badge t1">T1 공식출처</span>
+            </div>
+          </div>
+
+          <!-- License Comparison Summary -->
+          <div style="padding: 16px; background: var(--green-soft); border-radius: 8px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 8px;">
+              유사도 평가
+            </div>
+            <div style="font-size: 13px; color: var(--ink); line-height: 1.7;">
+              두 국가 모두 중앙은행/금융당국의 인가·등록 체계를 갖추고 있으며, 자본금 요건이 명확합니다.
+              인도는 외국인 지분 한도(49%)가 있으나 한국 본사는 이미 캐피탈 운영 경험이 있어
+              현지 파트너십 구조로 진출 가능합니다.
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Category Analysis -->
+        <div id="section6" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">6. 카테고리별 항목 분석</h3>
+
+          <details style="margin-bottom: 16px; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;">
+            <summary style="font-size: 14px; font-weight: 600; cursor: pointer; color: var(--accent);">
+              시장 카테고리 (78점) ▼
+            </summary>
+            <div style="margin-top: 16px;">
+              <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                <thead style="background: var(--line-soft);">
+                  <tr>
+                    <th style="padding: 8px; text-align: left;">항목</th>
+                    <th style="padding: 8px; text-align: right;">한국(비교국)</th>
+                    <th style="padding: 8px; text-align: right;">인도(대상국)</th>
+                    <th style="padding: 8px; text-align: center;">유사도</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">오토금융 침투율</td>
+                    <td style="padding: 8px; text-align: right;">68%</td>
+                    <td style="padding: 8px; text-align: right;">72%</td>
+                    <td style="padding: 8px; text-align: center;"><span class="status-badge transplantable">일치</span></td>
+                  </tr>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">평균 차량가격 (USD)</td>
+                    <td style="padding: 8px; text-align: right;">$28,000</td>
+                    <td style="padding: 8px; text-align: right;">$18,500</td>
+                    <td style="padding: 8px; text-align: center;"><strong style="color: var(--amber);">72</strong></td>
+                  </tr>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">개인:법인 비율</td>
+                    <td style="padding: 8px; text-align: right;">75:25</td>
+                    <td style="padding: 8px; text-align: right;">80:20</td>
+                    <td style="padding: 8px; text-align: center;"><span class="status-badge transplantable">일치</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <details style="margin-bottom: 16px; padding: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;">
+            <summary style="font-size: 14px; font-weight: 600; cursor: pointer; color: var(--accent);">
+              규제 카테고리 (72점) ▼
+            </summary>
+            <div style="margin-top: 16px;">
+              <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                <thead style="background: var(--line-soft);">
+                  <tr>
+                    <th style="padding: 8px; text-align: left;">항목</th>
+                    <th style="padding: 8px; text-align: right;">한국(비교국)</th>
+                    <th style="padding: 8px; text-align: right;">인도(대상국)</th>
+                    <th style="padding: 8px; text-align: center;">유사도</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">외국인 지분 한도</td>
+                    <td style="padding: 8px; text-align: right;">제한없음</td>
+                    <td style="padding: 8px; text-align: right;">49%</td>
+                    <td style="padding: 8px; text-align: center;"><strong style="color: var(--amber);">65</strong></td>
+                  </tr>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">법인세율</td>
+                    <td style="padding: 8px; text-align: right;">24%</td>
+                    <td style="padding: 8px; text-align: right;">25%</td>
+                    <td style="padding: 8px; text-align: center;"><span class="status-badge transplantable">일치</span></td>
+                  </tr>
+                  <tr style="border-top: 1px solid var(--line);">
+                    <td style="padding: 8px;">차량회수 소요기간</td>
+                    <td style="padding: 8px; text-align: right;">30일</td>
+                    <td style="padding: 8px; text-align: right;">45일</td>
+                    <td style="padding: 8px; text-align: center;"><strong style="color: var(--green);">78</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <div style="font-size: 12px; color: var(--ink-soft); padding: 12px; background: var(--line-soft); border-radius: 6px;">
+            환경(금융), 시스템 카테고리 세부 항목 비교는 접기/펼치기로 제공됩니다.
+          </div>
+        </div>
+
+        <!-- Section 7: Cost Estimation -->
+        <div id="section7" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">7. 진출 비용 추정</h3>
+
+          <div style="padding: 16px; background: var(--amber-soft); border-left: 4px solid var(--amber); border-radius: 6px; margin-bottom: 16px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 6px;">
+              ⚠️ 추정 오차 범위
+            </div>
+            <div style="font-size: 13px; color: var(--ink);">
+              비용 추정은 한국 진출 실적(1개 표본)을 기준으로 유사도 배율을 적용한 것입니다.
+              실제 비용은 현지 파트너·환율·시기에 따라 ±30% 변동 가능합니다.
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>비용 항목</th>
+                <th style="text-align: right;">한국 실적</th>
+                <th style="text-align: center;">적용 비율</th>
+                <th style="text-align: right;">인도 추정</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>라이선스·인허가</td>
+                <td style="text-align: right;">$200,000</td>
+                <td style="text-align: center;">100%</td>
+                <td style="text-align: right;"><strong>$200,000</strong></td>
+              </tr>
+              <tr>
+                <td>법인 설립·등록</td>
+                <td style="text-align: right;">$150,000</td>
+                <td style="text-align: center;">120%</td>
+                <td style="text-align: right;"><strong>$180,000</strong></td>
+              </tr>
+              <tr>
+                <td>시스템 구축</td>
+                <td style="text-align: right;">$600,000</td>
+                <td style="text-align: center;">80% (이식)</td>
+                <td style="text-align: right;"><strong>$480,000</strong></td>
+              </tr>
+              <tr>
+                <td>현지 자문(법무·세무)</td>
+                <td style="text-align: right;">$180,000</td>
+                <td style="text-align: center;">150%</td>
+                <td style="text-align: right;"><strong>$270,000</strong></td>
+              </tr>
+              <tr>
+                <td>인력·운영 초기비용</td>
+                <td style="text-align: right;">$170,000</td>
+                <td style="text-align: center;">150%</td>
+                <td style="text-align: right;"><strong>$255,000</strong></td>
+              </tr>
+              <tr style="background: var(--accent-soft); font-weight: 700;">
+                <td>합계</td>
+                <td style="text-align: right;">$1,300,000</td>
+                <td style="text-align: center;">—</td>
+                <td style="text-align: right;"><strong style="color: var(--accent);">$1,385,000</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="margin-top: 16px; padding: 12px; background: var(--line-soft); border-radius: 6px; font-size: 12px; color: var(--ink-soft);">
+            <strong>산정 근거:</strong> 시스템 유사도 76점 → 코어 이식 가능 (재구축 불요) → 비용 20% 절감.
+            규제·자문 복잡도는 외국인 지분 제한으로 +50% 가산.
+          </div>
+        </div>
+
+        <!-- Section 8: Risks -->
+        <div id="section8" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">8. 리스크 & 검토 필요 항목</h3>
+
+          <div style="margin-bottom: 12px;">
+            <div style="padding: 12px; background: var(--signal-soft); border-left: 4px solid var(--signal); border-radius: 6px; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="color: var(--signal);">외환 변동성</strong>
+                <span class="status-badge blocked">HIGH</span>
+              </div>
+              <div style="font-size: 13px; color: var(--ink);">
+                루피 환율 변동이 크며, 송환 시 FEMA 규정 준수 필요. 헤지 전략 수립 권장.
+              </div>
+            </div>
+
+            <div style="padding: 12px; background: var(--amber-soft); border-left: 4px solid var(--amber); border-radius: 6px; margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="color: var(--amber);">외국인 지분 49% 제한</strong>
+                <span class="status-badge investigate">MED</span>
+              </div>
+              <div style="font-size: 13px; color: var(--ink);">
+                현지 파트너 51% 지분 확보 필요. 파트너 선정·계약 구조가 성공의 핵심.
+              </div>
+            </div>
+
+            <div style="padding: 12px; background: var(--green-soft); border-left: 4px solid var(--green); border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="color: var(--green);">시점 격차 (2020 vs 2025)</strong>
+                <span class="status-badge transplantable">LOW</span>
+              </div>
+              <div style="font-size: 13px; color: var(--ink);">
+                비교국 데이터는 5년 전 기준. 최근 규제 변화 재확인 필요하나 큰 변동 없음.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 9: Sources & Methodology -->
+        <div id="section9" style="margin-bottom: 32px;">
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">9. 출처 목록 & 방법론</h3>
+
+          <div style="margin-bottom: 20px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">출처 등급별 목록</h4>
+
+            <div style="padding: 14px; background: var(--green-soft); border-radius: 8px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span class="tier-badge t1">T1</span>
+                <strong style="font-size: 13px;">공식 1차 출처 (신뢰도 계수 1.0)</strong>
+              </div>
+              <ul style="font-size: 12px; color: var(--ink-soft); margin-left: 20px; line-height: 1.8;">
+                <li>Reserve Bank of India (rbi.org.in) — NBFC 규제·자본금 요건</li>
+                <li>금융위원회 (fsc.go.kr) — 한국 여신전문금융업 자본금</li>
+                <li>IMF World Economic Outlook — GDP 데이터</li>
+                <li>UN World Population Prospects — 인구 통계</li>
+              </ul>
+            </div>
+
+            <div style="padding: 14px; background: var(--amber-soft); border-radius: 8px; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span class="tier-badge t2">T2</span>
+                <strong style="font-size: 13px;">준공식 출처 (신뢰도 계수 0.9)</strong>
+                <span style="font-size: 11px; color: var(--signal); margin-left: 8px;">[공식 미확보 항목 포함]</span>
+              </div>
+              <ul style="font-size: 12px; color: var(--ink-soft); margin-left: 20px; line-height: 1.8;">
+                <li>업계 협회 보고서 — 시장 침투율 추정</li>
+                <li>중앙은행 월간 통계 — 금리·LTV 데이터</li>
+              </ul>
+            </div>
+
+            <div style="padding: 14px; background: #f4e8d0; border-radius: 8px;">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span class="tier-badge t3">T3</span>
+                <strong style="font-size: 13px;">참고 출처 (신뢰도 계수 0.7)</strong>
+              </div>
+              <ul style="font-size: 12px; color: var(--ink-soft); margin-left: 20px; line-height: 1.8;">
+                <li>산업 리서치 기관 — 딜러 집중도 추정</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style="padding: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;">
+            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">방법론 & 가중치 스냅샷</h4>
+
+            <div style="font-size: 13px; line-height: 1.8; color: var(--ink-soft); margin-bottom: 16px;">
+              본 보고서는 생성 시점의 룰셋으로 고정되며, 이후 가중치 변경과 무관하게 동일한 점수·판정을 재현합니다.
+            </div>
+
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">적용 룰셋</div>
+                <div style="font-size: 13px;">디폴트 v1</div>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">카테고리 가중치</div>
+                <div style="font-size: 13px;">
+                  시장 30% · 규제 25% · 환경 20% · 시스템 25%
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">임계값</div>
+                <div style="font-size: 13px;">
+                  이식 임계 70점 · 시스템 게이트 60점
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 12px; font-weight: 600; margin-bottom: 8px;">신뢰도 계수</div>
+                <div style="font-size: 13px;">
+                  T1: 1.0 · T2: 0.9 · T3: 0.7
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-soft);">
+              활성 킬스위치: 외국인 지분 한도, 외환 송금 규제, 배당 송금 제한, 금리 상한
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- S5: Data Management -->
+    <div id="s5" class="view">
+      <h2 class="page-title">데이터 관리</h2>
+      <p class="page-desc">진출국 실적 데이터와 대상국 조사 데이터를 관리합니다.</p>
+
+      <!-- Entered Countries (Baseline Data) -->
+      <div class="card mb-16">
+        <div class="card-h">진출국 실적 데이터 (기준)</div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>국가</th>
+              <th>권역</th>
+              <th>상태</th>
+              <th>진출 시점</th>
+              <th>준비 기간</th>
+              <th>진출 비용</th>
+              <th>코어시스템</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇰🇷</span>
+                  <span>한국</span>
+                </div>
+              </td>
+              <td>아시아·태평양</td>
+              <td><span class="status-badge entered">진출</span></td>
+              <td>본사</td>
+              <td>9개월</td>
+              <td>$1,300,000</td>
+              <td>패키지</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇺🇸</span>
+                  <span>미국</span>
+                </div>
+              </td>
+              <td>미주</td>
+              <td><span class="status-badge entered">진출</span></td>
+              <td>2022-03</td>
+              <td>12개월</td>
+              <td>$1,500,000</td>
+              <td>SI</td>
+            </tr>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇩🇪</span>
+                  <span>독일</span>
+                </div>
+              </td>
+              <td>유럽</td>
+              <td><span class="status-badge entered">진출</span></td>
+              <td>2021-06</td>
+              <td>14개월</td>
+              <td>$2,000,000</td>
+              <td>패키지</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Target Countries (Survey Data) -->
+      <div class="card">
+        <div class="card-h">대상국 조사 데이터</div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>국가</th>
+              <th>권역</th>
+              <th>최근 조사일</th>
+              <th>데이터 구분</th>
+              <th>충진율</th>
+              <th>공식출처 비율</th>
+              <th>액션</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇮🇳</span>
+                  <span>인도</span>
+                </div>
+              </td>
+              <td>아시아·태평양</td>
+              <td>2025-06-10</td>
+              <td>현행</td>
+              <td><strong>92%</strong></td>
+              <td>
+                <span class="tier-badge t1">T1 78%</span>
+              </td>
+              <td>
+                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="navigate('s1')">
+                  진단하기
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇮🇩</span>
+                  <span>인도네시아</span>
+                </div>
+              </td>
+              <td>아시아·태평양</td>
+              <td>2025-06-08</td>
+              <td>현행</td>
+              <td><strong>88%</strong></td>
+              <td>
+                <span class="tier-badge t2">T1 65%</span>
+              </td>
+              <td>
+                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="navigate('s1')">
+                  진단하기
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇲🇽</span>
+                  <span>멕시코</span>
+                </div>
+              </td>
+              <td>미주</td>
+              <td>2025-06-05</td>
+              <td>현행</td>
+              <td><strong>85%</strong></td>
+              <td>
+                <span class="tier-badge t2">T1 70%</span>
+              </td>
+              <td>
+                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="navigate('s1')">
+                  진단하기
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="country-cell">
+                  <span style="font-size: 18px;">🇪🇸</span>
+                  <span>스페인</span>
+                </div>
+              </td>
+              <td>유럽</td>
+              <td>2025-06-12</td>
+              <td>현행</td>
+              <td><strong>95%</strong></td>
+              <td>
+                <span class="tier-badge t1">T1 85%</span>
+              </td>
+              <td>
+                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 12px;" onclick="navigate('s1')">
+                  진단하기
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p style="font-size: 12px; color: var(--ink-soft); margin-top: 12px;">
+          * 공식출처(T1) 비율이 낮은 국가는 진단 시 신뢰도 계수가 자동 하향됩니다. 조사 보강을 권장합니다.
+        </p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ===== Navigation =====
+function navigate(viewId) {
+  // Hide all views
+  document.querySelectorAll('.view').forEach(view => {
+    view.classList.remove('active');
+  });
+
+  // Remove active state from all nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active');
+  });
+
+  // Show selected view
+  document.getElementById(viewId).classList.add('active');
+
+  // Set active nav item
+  document.querySelector(`[data-view="${viewId}"]`).classList.add('active');
+
+  // Update breadcrumb
+  const viewNames = {
+    's0': '대시보드',
+    's1': '단일 국가 진단',
+    's2': '권역 순위',
+    's3': '설정 (가중치 & 판정)',
+    's4': '보고서 뷰어',
+    's5': '데이터 관리'
+  };
+  document.getElementById('currentViewName').textContent = viewNames[viewId];
+
+  // Auto-execute for certain views
+  if (viewId === 's1' && document.getElementById('targetCountry').value) {
+    // Auto-run diagnosis if country already selected
+  }
+  if (viewId === 's2') {
+    // Auto-calculate ranking
+  }
+}
+
+// Add click handlers to nav items
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const viewId = item.getAttribute('data-view');
+    navigate(viewId);
+  });
+});
+
+// ===== Multi-Agent Analysis System =====
+let analysisState = {
+  isRunning: false,
+  country: '',
+  countryCode: '', // 추가: 선택된 국가 코드
+  countryFlag: '',
+  startTime: null,
+  agents: {
+    market: { progress: 0, status: 'waiting', message: '대기 중...' },
+    regulation: { progress: 0, status: 'waiting', message: '대기 중...' },
+    environment: { progress: 0, status: 'waiting', message: '대기 중...' },
+    system: { progress: 0, status: 'waiting', message: '대기 중...' },
+    summary: { progress: 0, status: 'waiting', message: '모든 에이전트 완료 후 시작됩니다.' }
+  }
+};
+
+let analysisInterval = null;
+
+// Country flags mapping
+const countryFlags = {
+  'india': '🇮🇳',
+  'indonesia': '🇮🇩',
+  'mexico': '🇲🇽',
+  'spain': '🇪🇸',
+  'uk': '🇬🇧',
+  'poland': '🇵🇱'
+};
+
+const countryNames = {
+  'india': '인도',
+  'indonesia': '인도네시아',
+  'mexico': '멕시코',
+  'spain': '스페인',
+  'uk': '영국',
+  'poland': '폴란드'
+};
+
+// Country data (Mock) - 실제 구현 시 백엔드에서 가져올 데이터
+const countryData = {
+  'india': {
+    name: '인도',
+    flag: '🇮🇳',
+    region: '아시아·태평양',
+    score: 74,
+    license: 'NBFC-ICC 등록',
+    licenseDetail: '(Investment and Credit Company)',
+    capital: 'NOF ₹10 crore',
+    capitalUSD: '(약 $1.2M USD)',
+    authority: 'Reserve Bank of India',
+    restriction: '외국인 지분 한도 49%'
+  },
+  'indonesia': {
+    name: '인도네시아',
+    flag: '🇮🇩',
+    region: '아시아·태평양',
+    score: 68,
+    license: 'NBFI 라이선스',
+    licenseDetail: '(Non-Bank Financial Institution)',
+    capital: 'IDR 100억',
+    capitalUSD: '(약 $0.7M USD)',
+    authority: 'Bank Indonesia',
+    restriction: '외국인 지분 한도 85%'
+  },
+  'mexico': {
+    name: '멕시코',
+    flag: '🇲🇽',
+    region: '미주',
+    score: 62,
+    license: 'SOFOM ENR',
+    licenseDetail: '(Non-Regulated Financial Company)',
+    capital: 'MXN 5,000만',
+    capitalUSD: '(약 $2.9M USD)',
+    authority: 'CONDUSEF',
+    restriction: '외국인 지분 제한 없음'
+  },
+  'spain': {
+    name: '스페인',
+    flag: '🇪🇸',
+    region: '유럽',
+    score: 81,
+    license: 'EFC 인가',
+    licenseDetail: '(Establecimiento Financiero de Crédito)',
+    capital: '€5M',
+    capitalUSD: '(약 $5.4M USD)',
+    authority: 'Banco de España',
+    restriction: 'EU 규정 준수 필요'
+  },
+  'uk': {
+    name: '영국',
+    flag: '🇬🇧',
+    region: '유럽',
+    score: 78,
+    license: 'FCA 인가',
+    licenseDetail: '(Financial Conduct Authority)',
+    capital: '£1M',
+    capitalUSD: '(약 $1.3M USD)',
+    authority: 'Financial Conduct Authority',
+    restriction: '외국인 지분 제한 없음'
+  },
+  'poland': {
+    name: '폴란드',
+    flag: '🇵🇱',
+    region: '유럽',
+    score: 70,
+    license: 'PFSA 라이선스',
+    licenseDetail: '(Polish Financial Supervision Authority)',
+    capital: 'PLN 500만',
+    capitalUSD: '(약 $1.2M USD)',
+    authority: 'Polish FSA',
+    restriction: 'EU 규정 준수 필요'
+  }
+};
+
+function toggleStatusCard() {
+  const body = document.getElementById('statusCardBody');
+  const toggle = document.getElementById('statusCardToggle');
+
+  if (body.classList.contains('expanded')) {
+    body.classList.remove('expanded');
+    toggle.classList.remove('expanded');
+  } else {
+    body.classList.add('expanded');
+    toggle.classList.add('expanded');
+  }
+}
+
+function openAnalysisModal() {
+  document.getElementById('analysisModal').classList.add('active');
+}
+
+function closeAnalysisModal() {
+  document.getElementById('analysisModal').classList.remove('active');
+}
+
+function viewReport() {
+  closeAnalysisModal();
+  hideAnalysisStatus();
+
+  // Update S4 report with selected country data
+  updateReportView();
+
+  navigate('s4');
+}
+
+function updateReportView() {
+  const countryCode = analysisState.countryCode;
+  const country = countryData[countryCode] || countryData['india'];
+
+  console.log(`[updateReportView] 보고서 업데이트: ${country.name} (${countryCode})`);
+
+  // Update report header
+  const reportFlag = document.querySelector('#s4 .modal-title span:first-child');
+  if (reportFlag) {
+    reportFlag.textContent = country.flag;
+  }
+
+  const reportTitle = document.querySelector('#s4 .modal-title');
+  if (reportTitle) {
+    reportTitle.innerHTML = `
+      <span>${country.flag}</span>
+      <span>${country.name} 진출 진단 보고서</span>
+    `;
+  }
+
+  // Update report header info
+  const headerInfo = document.querySelector('#s4 .modal-title + div');
+  if (headerInfo) {
+    headerInfo.innerHTML = `
+      <div style="font-size: 13px; color: var(--ink-soft); margin-top: 4px;">
+        권역: ${country.region} · 비교국: 한국
+      </div>
+    `;
+  }
+
+  // Update license section in report (section 5)
+  const reportBody = document.querySelector('#s4 .card');
+  if (reportBody) {
+    // Find and update the license section
+    const licenseSection = reportBody.querySelector('#section5');
+    if (licenseSection) {
+      // Update target country license info
+      const targetCountryGrid = licenseSection.querySelector('.grid');
+      if (targetCountryGrid) {
+        targetCountryGrid.innerHTML = `
+          <div>
+            <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">라이선스명</div>
+            <div style="font-size: 13px; font-weight: 600;">${country.license}</div>
+            <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+              ${country.licenseDetail}
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">최소 자본금 요건</div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--signal);">${country.capital}</div>
+            <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+              ${country.capitalUSD}
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">발급기관</div>
+            <div style="font-size: 13px;">${country.authority}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">주요 제약</div>
+            <div style="font-size: 13px;">${country.restriction}</div>
+          </div>
+        `;
+      }
+    }
+  }
+}
+
+function showAnalysisStatus(country, countryCode) {
+  const wrapper = document.getElementById('analysisStatusWrapper');
+  const flag = countryFlags[countryCode] || '🌍';
+  const name = countryNames[countryCode] || country;
+
+  // 전역 상태에 선택된 국가 정보 저장
+  analysisState.country = name;
+  analysisState.countryCode = countryCode;
+  analysisState.countryFlag = flag;
+  analysisState.startTime = Date.now();
+
+  console.log(`[showAnalysisStatus] 국가 설정: ${name} (${countryCode})`);
+
+  document.getElementById('statusCardFlag').textContent = flag;
+  document.getElementById('statusCardTitle').textContent = `${name} 분석 중...`;
+  document.getElementById('modalFlag').textContent = flag;
+  document.getElementById('modalTitle').textContent = `${name} 진출 진단 분석 중`;
+
+  wrapper.style.display = 'block';
+}
+
+function hideAnalysisStatus() {
+  document.getElementById('analysisStatusWrapper').style.display = 'none';
+  analysisState.isRunning = false;
+  if (analysisInterval) {
+    clearInterval(analysisInterval);
+    analysisInterval = null;
+  }
+}
+
+function updateAnalysisUI() {
+  const agents = analysisState.agents;
+
+  // Calculate overall progress
+  const totalProgress = (
+    agents.market.progress +
+    agents.regulation.progress +
+    agents.environment.progress +
+    agents.system.progress +
+    agents.summary.progress
+  ) / 5;
+
+  // Update status card (integer only, no decimals)
+  document.getElementById('statusOverallProgress').textContent = Math.floor(totalProgress);
+  document.getElementById('statusOverallBar').style.width = totalProgress + '%';
+
+  // Update modal (integer only, no decimals)
+  document.getElementById('modalOverallProgress').textContent = Math.floor(totalProgress);
+  document.getElementById('modalOverallBar').style.width = totalProgress + '%';
+
+  // Update each agent
+  ['market', 'regulation', 'environment', 'system', 'summary'].forEach(agentName => {
+    const agent = agents[agentName];
+    const capitalName = agentName.charAt(0).toUpperCase() + agentName.slice(1);
+
+    // Status card icons and progress
+    const icon = document.getElementById('icon' + capitalName);
+    const progress = document.getElementById('progress' + capitalName);
+
+    if (agent.status === 'completed') {
+      icon.textContent = '✓';
+      progress.textContent = '완료';
+      progress.className = 'agent-summary-progress completed';
+    } else if (agent.status === 'running') {
+      icon.textContent = '⏳';
+      progress.textContent = Math.floor(agent.progress) + '%';
+      progress.className = 'agent-summary-progress';
+    } else {
+      icon.textContent = '⏸';
+      progress.textContent = '대기 중';
+      progress.className = 'agent-summary-progress waiting';
+    }
+
+    // Modal detail
+    const detailItem = document.getElementById('detail' + capitalName);
+    const statusText = document.getElementById('status' + capitalName);
+    const bar = document.getElementById('bar' + capitalName);
+    const message = document.getElementById('message' + capitalName);
+    const detailIcon = document.getElementById('iconDetail' + capitalName);
+
+    // Update status text (integer only, no decimals)
+    statusText.textContent = agent.status === 'completed' ? '완료 ✓' : Math.floor(agent.progress) + '%';
+    statusText.className = 'agent-detail-status ' + agent.status;
+    bar.style.width = agent.progress + '%';
+    message.textContent = agent.message;
+
+    // Update detail icon
+    if (agent.status === 'completed') {
+      detailIcon.innerHTML = '✓';
+      detailIcon.className = 'agent-icon completed';
+      detailItem.classList.add('completed');
+      detailItem.classList.remove('active');
+      bar.classList.add('completed');
+    } else if (agent.status === 'running') {
+      if (!detailIcon.querySelector('.spinner')) {
+        detailIcon.innerHTML = '<span class="spinner"></span>';
+      }
+      detailIcon.className = 'agent-icon';
+      detailItem.classList.add('active');
+      detailItem.classList.remove('completed');
+    } else {
+      detailIcon.innerHTML = '⏸';
+      detailIcon.className = 'agent-icon';
+      detailItem.classList.remove('active', 'completed');
+    }
+  });
+
+  // Update analysis time
+  if (analysisState.startTime) {
+    const elapsed = Math.floor((Date.now() - analysisState.startTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    document.getElementById('analysisTime').textContent =
+      `소요 시간: ${minutes}분 ${seconds}초`;
+  }
+
+  // Check if Summary completed (not just total progress)
+  const summaryCompleted = agents.summary.status === 'completed' && agents.summary.progress >= 100;
+
+  if (summaryCompleted) {
+    document.getElementById('statusCardTitle').textContent =
+      `✓ ${analysisState.country} 분석 완료`;
+    document.getElementById('modalTitle').textContent =
+      `✓ ${analysisState.country} 진출 진단 분석 완료`;
+    document.getElementById('statusOverallBar').classList.add('completed');
+    document.getElementById('modalOverallBar').classList.add('completed');
+
+    // Enable report button only when Summary is completed
+    document.getElementById('viewReportBtn').classList.add('active');
+
+    if (analysisInterval) {
+      clearInterval(analysisInterval);
+      analysisInterval = null;
+    }
+  } else {
+    // Keep report button disabled until Summary completes
+    document.getElementById('viewReportBtn').classList.remove('active');
+  }
+}
+
+function simulateAgentProgress(agentName, messages) {
+  const agent = analysisState.agents[agentName];
+  let step = 0;
+
+  const agentInterval = setInterval(() => {
+    if (agent.progress >= 100) {
+      agent.status = 'completed';
+      agent.progress = 100; // Ensure exactly 100
+      agent.message = agentName === 'summary' ? '보고서 데이터 생성 완료' : '분석 완료';
+
+      console.log(`[${agentName}] 완료 - progress: ${agent.progress}, status: ${agent.status}`);
+
+      // Force UI update to show completion icon
+      updateAnalysisUI();
+
+      clearInterval(agentInterval);
+
+      // Check if all phase 1 agents completed, then start summary
+      const phase1Complete =
+        analysisState.agents.market.status === 'completed' &&
+        analysisState.agents.regulation.status === 'completed' &&
+        analysisState.agents.environment.status === 'completed' &&
+        analysisState.agents.system.status === 'completed';
+
+      if (phase1Complete && analysisState.agents.summary.status === 'waiting') {
+        console.log('[Summary] Phase 1 완료, Summary 에이전트 시작');
+        startSummaryAgent();
+      }
+
+      return;
+    }
+
+    agent.status = 'running';
+    agent.progress += Math.random() * 15 + 10; // 10-25% increment
+
+    if (agent.progress > 100) agent.progress = 100;
+
+    // Update message
+    if (messages && step < messages.length) {
+      agent.message = messages[step];
+      step++;
+    }
+
+    updateAnalysisUI();
+  }, 800 + Math.random() * 400); // 800-1200ms intervals
+}
+
+function startSummaryAgent() {
+  const agent = analysisState.agents.summary;
+  agent.status = 'running';
+  agent.message = '카테고리 점수 계산 중...';
+
+  // Update icon to spinner immediately
+  const detailIcon = document.getElementById('iconDetailSummary');
+  if (detailIcon) {
+    detailIcon.innerHTML = '<span class="spinner"></span>';
+    detailIcon.className = 'agent-icon';
+  }
+
+  const messages = [
+    '카테고리 점수 계산 중...',
+    '가중치 적용 중...',
+    '킬스위치·게이트 검증 중...',
+    '최종 판정 산출 중...',
+    '비용 추정 중...',
+    '보고서 데이터 생성 중...'
+  ];
+
+  simulateAgentProgress('summary', messages);
+}
+
+function startMultiAgentAnalysis(country, countryCode) {
+  analysisState.isRunning = true;
+
+  // Reset all agents
+  Object.keys(analysisState.agents).forEach(key => {
+    analysisState.agents[key] = { progress: 0, status: 'waiting', message: '대기 중...' };
+  });
+
+  showAnalysisStatus(country, countryCode);
+
+  // Start Phase 1: Parallel agents
+  setTimeout(() => {
+    simulateAgentProgress('market', [
+      '침투율 데이터 수집 중...',
+      '평균 차량가격 분석 중...',
+      '시장 규모 산출 중...',
+      '개인:법인 비율 확인 중...',
+      '딜러 집중도 분석 중...',
+      '시장 점수 계산 완료'
+    ]);
+  }, 200);
+
+  setTimeout(() => {
+    simulateAgentProgress('regulation', [
+      '외국인 지분 규제 확인 중...',
+      '라이선스 요건 조사 중...',
+      '법인세율 데이터 수집 중...',
+      '차량회수 절차 분석 중...',
+      '킬스위치 검증 중...',
+      '규제 점수 계산 완료'
+    ]);
+  }, 350);
+
+  setTimeout(() => {
+    simulateAgentProgress('environment', [
+      '평균 금리 데이터 수집 중...',
+      'LTV 비율 조사 중...',
+      '캡티브 강도 분석 중...',
+      '신용평가 체계 확인 중...',
+      '금융환경 점수 계산 완료'
+    ]);
+  }, 500);
+
+  setTimeout(() => {
+    simulateAgentProgress('system', [
+      '코어시스템 유형 조사 중...',
+      '벤더 락인 정도 분석 중...',
+      '딜러 시스템 연동 확인 중...',
+      '디지털 채널 성숙도 평가 중...',
+      '시스템 게이트 검증 중...',
+      '시스템 점수 계산 완료'
+    ]);
+  }, 280);
+
+  // Summary agent will start automatically after phase 1 completes
+}
+
+// ===== S1: Diagnosis =====
+function runDiagnosis() {
+  const targetCountry = document.getElementById('targetCountry').value;
+
+  if (!targetCountry) {
+    alert('대상 국가를 선택해주세요.');
+    return;
+  }
+
+  // Start multi-agent analysis
+  const countryName = countryNames[targetCountry] || targetCountry;
+  startMultiAgentAnalysis(countryName, targetCountry);
+
+  // Show the status card expanded initially
+  setTimeout(() => {
+    const body = document.getElementById('statusCardBody');
+    const toggle = document.getElementById('statusCardToggle');
+    body.classList.add('expanded');
+    toggle.classList.add('expanded');
+  }, 500);
+
+  // Do NOT open modal automatically - user must click "상세 팝업 열기" button
+
+  // After analysis completes (simulated), show results
+  setTimeout(() => {
+    showDiagnosisResults(targetCountry);
+  }, 12000); // Show results after ~12 seconds (simulated completion)
+}
+
+function showDiagnosisResults(countryCode) {
+  const country = countryData[countryCode] || countryData['india']; // fallback
+
+  console.log(`[showDiagnosisResults] 결과 표시: ${country.name} (${countryCode})`);
+
+  // Update result panel with selected country data
+  document.querySelector('.score-details h3').textContent = country.name;
+  document.querySelector('.score-details .score-meta:nth-child(3)').innerHTML =
+    `<strong>권역:</strong> ${country.region}`;
+  document.getElementById('scoreValue').textContent = country.score;
+
+  // Update license information
+  const licenseSection = document.querySelector('.result-panel .grid');
+  if (licenseSection) {
+    licenseSection.innerHTML = `
+      <div>
+        <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">라이선스명</div>
+        <div style="font-size: 13px; font-weight: 600;">${country.license}</div>
+        <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+          ${country.licenseDetail}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">최소 자본금 요건</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--signal);">${country.capital}</div>
+        <div style="font-size: 12px; color: var(--ink-soft); margin-top: 2px;">
+          ${country.capitalUSD}
+        </div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">발급기관</div>
+        <div style="font-size: 13px;">${country.authority}</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; color: var(--ink-soft); margin-bottom: 4px;">주요 제약</div>
+        <div style="font-size: 13px;">${country.restriction}</div>
+      </div>
+    `;
+  }
+
+  // Show result panel
+  document.getElementById('resultPanel').style.display = 'block';
+
+  // Animate score ring
+  const scoreCircle = document.getElementById('scoreCircle');
+  const circumference = 2 * Math.PI * 60;
+  const score = country.score;
+  const offset = circumference - (score / 100) * circumference;
+  scoreCircle.style.strokeDashoffset = offset;
+
+  // Scroll to result
+  document.getElementById('resultPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== S2: Ranking =====
+function calculateRanking() {
+  const region = document.getElementById('regionSelect').value;
+  const regionNames = {
+    'asia': '아시아·태평양',
+    'europe': '유럽',
+    'americas': '미주'
+  };
+
+  const regionName = regionNames[region] || region;
+
+  // Start regional analysis (simulates multiple countries)
+  analysisState.isRunning = true;
+  analysisState.country = regionName + ' 권역';
+  analysisState.countryFlag = '🌏';
+  analysisState.startTime = Date.now();
+
+  document.getElementById('statusCardFlag').textContent = '🌏';
+  document.getElementById('statusCardTitle').textContent = `${regionName} 권역 분석 중 (0/7 국가)`;
+  document.getElementById('modalFlag').textContent = '🌏';
+  document.getElementById('modalTitle').textContent = `${regionName} 권역 진출 우선순위 분석 중`;
+
+  document.getElementById('analysisStatusWrapper').style.display = 'block';
+
+  // Simulate regional analysis (simplified - shows combined progress)
+  let completedCountries = 0;
+  const totalCountries = 7;
+
+  const regionalInterval = setInterval(() => {
+    // Simulate country completion
+    if (completedCountries < totalCountries) {
+      completedCountries++;
+
+      // Update progress for all agents proportionally
+      const overallProgress = (completedCountries / totalCountries) * 100;
+
+      ['market', 'regulation', 'environment', 'system'].forEach(agentName => {
+        analysisState.agents[agentName].progress = Math.min(100, overallProgress + Math.random() * 10);
+        analysisState.agents[agentName].status = 'running';
+      });
+
+      if (completedCountries === totalCountries) {
+        analysisState.agents.summary.status = 'running';
+        analysisState.agents.summary.progress = 50;
+      }
+
+      document.getElementById('statusCardTitle').textContent =
+        `${regionName} 권역 분석 중 (${completedCountries}/${totalCountries} 국가)`;
+
+      updateAnalysisUI();
+    } else {
+      // Complete summary
+      analysisState.agents.summary.progress = 100;
+      analysisState.agents.summary.status = 'completed';
+
+      ['market', 'regulation', 'environment', 'system'].forEach(agentName => {
+        analysisState.agents[agentName].progress = 100;
+        analysisState.agents[agentName].status = 'completed';
+      });
+
+      updateAnalysisUI();
+      clearInterval(regionalInterval);
+
+      document.getElementById('statusCardTitle').textContent =
+        `✓ ${regionName} 권역 분석 완료 (${totalCountries}개 국가)`;
+    }
+  }, 1500);
+
+  console.log('Calculating ranking for:', regionName);
+}
+
+// ===== S3: Settings =====
+function updateWeights() {
+  const market = parseInt(document.getElementById('sliderMarket').value);
+  const regulation = parseInt(document.getElementById('sliderRegulation').value);
+  const environment = parseInt(document.getElementById('sliderEnvironment').value);
+  const system = parseInt(document.getElementById('sliderSystem').value);
+
+  document.getElementById('weightMarket').textContent = market;
+  document.getElementById('weightRegulation').textContent = regulation;
+  document.getElementById('weightEnvironment').textContent = environment;
+  document.getElementById('weightSystem').textContent = system;
+
+  const sum = market + regulation + environment + system;
+  document.getElementById('weightSum').textContent = sum;
+
+  const validation = document.getElementById('weightValidation');
+  if (sum === 100) {
+    validation.className = 'validation-msg success';
+    validation.innerHTML = '✓ 가중치 합계: <strong>' + sum + '</strong>%';
+  } else {
+    validation.className = 'validation-msg error';
+    validation.innerHTML = '⚠️ 가중치 합계를 100%로 맞춰주세요. 현재: <strong>' + sum + '</strong>%';
+  }
+}
+
+function updateThresholds() {
+  const transplant = document.getElementById('sliderTransplant').value;
+  const gate = document.getElementById('sliderGate').value;
+
+  document.getElementById('thresholdTransplant').textContent = transplant;
+  document.getElementById('thresholdGate').textContent = gate;
+}
+
+function updateCoeff() {
+  const tier2 = document.getElementById('sliderTier2').value / 100;
+  const tier3 = document.getElementById('sliderTier3').value / 100;
+
+  document.getElementById('coeffTier2').textContent = tier2.toFixed(1);
+  document.getElementById('coeffTier3').textContent = tier3.toFixed(1);
+}
+
+function toggleSwitch(element) {
+  element.classList.toggle('active');
+}
+
+function saveRuleset() {
+  const sum = parseInt(document.getElementById('weightSum').textContent);
+  if (sum !== 100) {
+    alert('가중치 합계를 100%로 맞춰주세요.');
+    return;
+  }
+
+  // Mock save - in real implementation would save to backend
+  const newVersion = 'v' + (Math.floor(Math.random() * 10) + 2);
+  document.getElementById('currentRuleset').textContent = '커스텀 ' + newVersion;
+  alert('새 룰셋이 저장되었습니다: 커스텀 ' + newVersion);
+}
+
+function saveAndReanalyze() {
+  saveRuleset();
+  setTimeout(() => {
+    navigate('s1');
+  }, 500);
+}
+
+// ===== World Map Interaction =====
+const countryFullNames = {
+  'korea': '한국',
+  'india': '인도',
+  'indonesia': '인도네시아',
+  'australia': '호주',
+  'china': '중국',
+  'germany': '독일',
+  'uk': '영국',
+  'spain': '스페인',
+  'poland': '폴란드',
+  'russia': '러시아',
+  'usa': '미국',
+  'canada': '캐나다',
+  'mexico': '멕시코'
+};
+
+const statusLabels = {
+  'entered': '진출',
+  'transplantable': '이식 가능',
+  'investigate': '심층조사',
+  'blocked': '차단',
+  'unanalyzed': '미조사'
+};
+
+function initWorldMap() {
+  const markers = document.querySelectorAll('.country-marker');
+  const tooltip = document.getElementById('mapTooltip');
+
+  markers.forEach(marker => {
+    // Hover effect
+    marker.addEventListener('mouseenter', (e) => {
+      const country = e.target.getAttribute('data-country');
+      const status = e.target.getAttribute('data-status');
+      const rect = e.target.getBoundingClientRect();
+      const mapRect = document.getElementById('worldMap').getBoundingClientRect();
+
+      tooltip.textContent = `${countryFullNames[country]} (${statusLabels[status]})`;
+      tooltip.style.left = (rect.left - mapRect.left + rect.width / 2) + 'px';
+      tooltip.style.top = (rect.top - mapRect.top - 35) + 'px';
+      tooltip.style.transform = 'translateX(-50%)';
+      tooltip.classList.add('visible');
+    });
+
+    marker.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+
+    // Click effect
+    marker.addEventListener('click', (e) => {
+      const country = e.target.getAttribute('data-country');
+      const status = e.target.getAttribute('data-status');
+      selectCountryOnMap(country, status);
+    });
+  });
+}
+
+function selectCountryOnMap(countryCode, status) {
+  const countryName = countryFullNames[countryCode];
+  const statusLabel = statusLabels[status];
+
+  console.log(`[Map] 국가 선택: ${countryName} (${status})`);
+
+  // Update country detail card
+  updateCountryDetailCard(countryCode, countryName, status);
+
+  // Scroll to detail card
+  document.getElementById('countryDetail').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function updateCountryDetailCard(countryCode, countryName, status) {
+  const detailCard = document.getElementById('countryDetail');
+
+  // Map country codes to flag emojis
+  const countryFlags = {
+    'korea': '🇰🇷',
+    'india': '🇮🇳',
+    'indonesia': '🇮🇩',
+    'australia': '🇦🇺',
+    'china': '🇨🇳',
+    'germany': '🇩🇪',
+    'uk': '🇬🇧',
+    'spain': '🇪🇸',
+    'poland': '🇵🇱',
+    'russia': '🇷🇺',
+    'usa': '🇺🇸',
+    'canada': '🇨🇦',
+    'mexico': '🇲🇽'
+  };
+
+  const countryRegions = {
+    'korea': '아시아·태평양',
+    'india': '아시아·태평양',
+    'indonesia': '아시아·태평양',
+    'australia': '아시아·태평양',
+    'china': '아시아·태평양',
+    'germany': '유럽',
+    'uk': '유럽',
+    'spain': '유럽',
+    'poland': '유럽',
+    'russia': '유럽',
+    'usa': '미주',
+    'canada': '미주',
+    'mexico': '미주'
+  };
+
+  const flag = countryFlags[countryCode] || '🌍';
+  const region = countryRegions[countryCode] || '';
+
+  // Update header
+  detailCard.querySelector('.country-flag').textContent = flag;
+  detailCard.querySelector('.country-info h3').textContent = countryName;
+  detailCard.querySelector('.country-region').textContent = region;
+
+  // Update status badge
+  const badge = detailCard.querySelector('.status-badge');
+  badge.className = `status-badge ${status}`;
+  badge.textContent = statusLabels[status];
+
+  // Update action buttons based on status
+  const actionArea = detailCard.querySelector('div[style*="margin-top: 16px"]');
+
+  if (status === 'entered') {
+    actionArea.innerHTML = `
+      <button class="btn btn-secondary" onclick="navigate('s5')">실적 데이터 보기</button>
+    `;
+  } else if (status === 'transplantable' || status === 'investigate') {
+    actionArea.innerHTML = `
+      <button class="btn btn-primary" onclick="navigateToAnalysis('${countryCode}')">단일 진단 보기</button>
+      <button class="btn btn-secondary" onclick="navigate('s5')" style="margin-left: 8px;">조사 데이터 보기</button>
+    `;
+  } else {
+    actionArea.innerHTML = `
+      <button class="btn btn-secondary" onclick="navigate('s1')">진단 실행</button>
+    `;
+  }
+
+  // Update details based on status
+  const detailsGrid = detailCard.querySelector('.grid');
+  if (status === 'entered') {
+    detailsGrid.innerHTML = `
+      <div>
+        <div class="form-label">진출 시점</div>
+        <div style="font-size: 14px; margin-top: 4px;">2020-03</div>
+      </div>
+      <div>
+        <div class="form-label">진출 비용</div>
+        <div style="font-size: 14px; margin-top: 4px;">$1,500,000</div>
+      </div>
+    `;
+  } else if (status === 'transplantable') {
+    const countryInfo = countryData[countryCode] || countryData['india'];
+    detailsGrid.innerHTML = `
+      <div>
+        <div class="form-label">종합 점수</div>
+        <div style="font-size: 14px; margin-top: 4px; color: var(--green); font-weight: 700;">${countryInfo.score}점</div>
+      </div>
+      <div>
+        <div class="form-label">판정</div>
+        <div style="font-size: 14px; margin-top: 4px;">이식 가능</div>
+      </div>
+    `;
+  } else if (status === 'investigate') {
+    const countryInfo = countryData[countryCode] || { score: 65 };
+    detailsGrid.innerHTML = `
+      <div>
+        <div class="form-label">종합 점수</div>
+        <div style="font-size: 14px; margin-top: 4px; color: var(--amber); font-weight: 700;">${countryInfo.score}점</div>
+      </div>
+      <div>
+        <div class="form-label">판정</div>
+        <div style="font-size: 14px; margin-top: 4px;">심층조사 권장</div>
+      </div>
+    `;
+  } else {
+    detailsGrid.innerHTML = `
+      <div>
+        <div class="form-label">상태</div>
+        <div style="font-size: 14px; margin-top: 4px;">조사 데이터 없음</div>
+      </div>
+      <div>
+        <div class="form-label">권장 액션</div>
+        <div style="font-size: 14px; margin-top: 4px;">데이터 수집 필요</div>
+      </div>
+    `;
+  }
+}
+
+function navigateToAnalysis(countryCode) {
+  // Map internal country codes to dropdown values
+  const countryMapping = {
+    'india': 'india',
+    'indonesia': 'indonesia',
+    'mexico': 'mexico',
+    'spain': 'spain',
+    'uk': 'uk',
+    'poland': 'poland'
+  };
+
+  const dropdownValue = countryMapping[countryCode];
+
+  if (dropdownValue) {
+    navigate('s1');
+    setTimeout(() => {
+      document.getElementById('targetCountry').value = dropdownValue;
+    }, 100);
+  } else {
+    navigate('s1');
+  }
+}
+
+// ===== Initialize =====
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('오토금융 해외진출 진단 콘솔 initialized');
+
+  // Initialize world map
+  initWorldMap();
+
+  // Close modal on outside click
+  document.getElementById('analysisModal').addEventListener('click', (e) => {
+    if (e.target.id === 'analysisModal') {
+      closeAnalysisModal();
+    }
+  });
+
+  // Close modal on ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeAnalysisModal();
+    }
+  });
+});
+</script>
+
+</body>
+</html>

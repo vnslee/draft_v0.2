@@ -1,0 +1,207 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 자동차 구매 프로세스 JSON 초안 (DB 스키마 확정 전). 국가 간 프로세스 유사도 비교/스코어링용.",
+    "definition_doc": "requirements/data/01_market_landscape/02_purchase_process.md",
+    "data_year": 2025,
+    "purpose": "국가별 자동차 구매 프로세스를 동일한 축(dimension) 체계로 구조화하여 타 국가와 유사도 비교·스코어링에 활용한다. 축 체계가 국가 간 동일해야 비교가 성립한다.",
+    "dimensions": ["online_digital", "dealership_model", "financing_incentives", "ev_process"],
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, note?} 객체로 표기한다. estimated=true 는 추정치/미확정, false 는 확정 실측치(적대적 검증 통과). value=null 은 미확보(누락). 각 축(dimension)의 attributes[] 는 정성/정량 속성 목록이며 complete=false 면 해당 축 일부/전부 미확보.",
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정 (저장 유형 미정).",
+      "지어내기 금지: 미확보 데이터는 채워넣지 않는다(누락=미확보).",
+      "출처 제약: 일반 뉴스 기사 미사용. 제조사 공식 뉴스룸(GM/Toyota/Ford 및 산하 브랜드) + EV 세액공제는 정부 공식(IRS) 한정.",
+      "deep-research(3표 적대적 검증) 통과 항목만 verified=true. 반증(REFUTED) 항목은 refuted_claims[]에 별도 보관, attributes[]에는 미수록.",
+      "verification.vote 는 'confirm-refute' 표 (예: '3-0', '2-1'). 2/3 이상 반박 시 폐기.",
+      "유사도 비교를 위해 각 attribute 에 'key'(국가 공통 비교키)를 부여한다. 동일 key 끼리 국가 간 비교/스코어링한다.",
+      "Ford 공백: Ford 1차 보도자료에서 검증 통과 주장 없음 → attributes 미수록, open_gaps에 기록."
+    ],
+    "verification": "deep-research workflow (fan-out search → fetch primary sources → adversarial verification). US: 23 confirmed / 2 refuted (25 verified of 67 extracted).",
+    "scoring_hint": "국가 간 유사도는 동일 dimension·동일 attribute.key 의 (존재여부 + value 근접도 + 정성 라벨 일치)로 산출 권장. value=null(미확보)는 비교에서 제외하거나 별도 패널티 처리.",
+    "open_gaps": [
+      "미국: Ford 1차 출처 검증 통과 주장 없음(디지털 리테일·Power Promise·금융 미수록).",
+      "미국: GM/Ford 통합 온라인 *구매(주문→결제)* 플랫폼 1차 보도자료 미확보.",
+      "미국: EV 세액공제 종료(2025.9.30) 이후 OEM 자체 EV 인센티브 정책 미확보.",
+      "미국: OEM 2025 리스 약정조건(평균 APR·잔가·개월) 미확보."
+    ]
+  },
+  "processes": [
+    {
+      "country": "미국",
+      "country_code": "US",
+      "region": "미주",
+      "status": "부분확보",
+      "data_year": 2025,
+      "top_oem_groups": ["GM", "Toyota Motor North America", "Ford"],
+      "note": "판매 상위 3개 제조사 그룹 중심. 제조사 공식 뉴스룸 + IRS 정부자료만 사용. Ford는 검증 통과 주장 없어 미수록.",
+      "dimensions": {
+        "online_digital": {
+          "complete": false,
+          "note": "Toyota SmartPath/Monogram 옴니채널 검증 완료. GM은 SDV 플랫폼(구매 후 경험). 통합 온라인 구매(주문→결제) 플랫폼은 미확보.",
+          "attributes": [
+            {
+              "key": "oem_digital_retail_platform",
+              "label": "제조사 디지털 리테일 플랫폼 존재",
+              "value": { "value": true, "year": 2025, "estimated": false, "source": "https://pressroom.toyota.com/smartpath-is-now-toyota-dealers-online-system-of-choice/", "note": "Toyota SmartPath(딜러 공식 온라인 시스템) / Lexus Monogram. 2020.4 출시." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "digital_retail_omnichannel",
+              "label": "온라인-오프라인 끊김없는 옴니채널",
+              "value": { "value": true, "year": 2025, "estimated": false, "source": "https://pressroom.toyota.com/the-power-of-partnerships-developing-the-smartpath-and-monogram-digital-retail-solution/", "note": "온라인 검색·금융·계약을 딜러와 끊김없이 연계" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "digital_retail_cumulative_customers",
+              "label": "디지털 리테일 누적 고객(대표 플랫폼)",
+              "value": { "value": 1000000, "year": 2025, "estimated": false, "source": "https://pressroom.toyota.com/toyota-surprises-1-millionth-smartpath-customer-with-free-rav4-2/", "note": "Toyota SmartPath 누적 100만 고객(2025.8.19)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "oem_online_purchase_checkout",
+              "label": "제조사 통합 온라인 구매(주문→결제)",
+              "value": { "value": null, "year": 2025, "estimated": false, "source": null, "note": "GM/Ford 통합 온라인 구매 플랫폼 1차 보도자료 미확보" },
+              "verification": { "verified": false, "vote": null }
+            }
+          ]
+        },
+        "dealership_model": {
+          "complete": false,
+          "note": "딜러 네트워크 기반(온라인 시작→딜러 마무리). 판매 만족도·시장 리더십 확보. 협상/재고 세부는 미확보.",
+          "attributes": [
+            {
+              "key": "primary_sales_channel",
+              "label": "주력 판매 채널",
+              "value": { "value": "딜러 네트워크 (프랜차이즈 딜러십)", "year": 2025, "estimated": false, "source": "https://pressroom.toyota.com/smartpath-is-now-toyota-dealers-online-system-of-choice/", "note": "온라인 디지털 리테일이 딜러 거래를 보조하는 하이브리드. 직판(DTC) 아님." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "market_sales_leader_oem",
+              "label": "시장 판매 1위 OEM 그룹",
+              "value": { "value": "GM", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/news/us/en/2026/jan/0105-gmsales.html", "note": "2025 미국 산업 판매 1위, 전년 대비 약 +6%" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "sales_satisfaction_leader_mass_market",
+              "label": "판매 만족도(SSI) 매스마켓 1위 브랜드",
+              "value": { "value": "Buick", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/topic/us/en/2025/nov/1106-GM-Brands-new-vehicle-purchase-experience-study-Buick-market-spot1.html", "note": "2025 J.D. Power 신차 구매경험 조사. Chevrolet은 트럭 부문 1위. Cadillac 전체 6위는 GM 프레이밍." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "incentive_level_vs_industry",
+              "label": "인센티브 수준 (vs 산업 평균)",
+              "value": { "value": "산업 평균 이하 (GM 자체 주장)", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/news/us/en/2026/jan/0105-gmsales.html", "note": "GM은 낮은 인센티브로 성장 달성했다고 밝힘" },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        },
+        "financing_incentives": {
+          "complete": false,
+          "note": "로열티/카드 인센티브(GM Rewards Mastercard) + EV 인센티브 조회도구(Toyota). 리스 약정조건·할부 금리 등은 미확보.",
+          "attributes": [
+            {
+              "key": "oem_loyalty_program",
+              "label": "제조사 로열티/리워드 프로그램",
+              "value": { "value": true, "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/news/us/en/2025/may/0520-GM-enhances-loyalty-program-unveils-GM-Rewards-Mastercard-Barclays.html", "note": "GM Rewards 전면 개편(2025.5.20)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "oem_cobrand_credit_card",
+              "label": "제조사 제휴 신용카드",
+              "value": { "value": "GM Rewards Mastercard (Barclays)", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/news/us/en/2025/may/0520-GM-enhances-loyalty-program-unveils-GM-Rewards-Mastercard-Barclays.html", "note": "2025.5.20 출시. GM 관련 지출 3x 포인트(2-1로 다소 낮은 신뢰도). 포인트는 신차/부품/서비스 사용 가능." },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "ev_incentive_finder_tool",
+              "label": "EV 인센티브/세액공제 조회도구",
+              "value": { "value": true, "year": 2023, "estimated": false, "source": "https://pressroom.toyota.com/toyota-ev-incentive-finder-powered-by-ev-life-helps-customers-find-incentives-tax-credits-and-more/", "note": "Toyota EV Incentive Finder(EV Life 제휴). 470+ 프로그램 커버(2-1). 출처 2023.2 → 2025 유효성 별도 확인 필요." },
+              "verification": { "verified": true, "vote": "2-1" }
+            }
+          ]
+        },
+        "ev_process": {
+          "complete": false,
+          "note": "연방 세액공제(IRS) + OEM EV 전용모델/충전 연계. 세액공제는 2025.9.30 취득분 이후 종료(OBBBA).",
+          "attributes": [
+            {
+              "key": "federal_new_ev_credit_max",
+              "label": "연방 신차 클린 비클 세액공제 최대액(USD)",
+              "value": { "value": 7500, "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after", "note": "핵심광물 요건/배터리부품 요건으로 분할 적용(2023.4.18 이후 인도분)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "federal_ev_credit_income_cap_mfj",
+              "label": "세액공제 소득상한 MAGI - 부부합산(USD)",
+              "value": { "value": 300000, "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after", "note": "세대주 $225,000 / 단독 $150,000" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "federal_ev_credit_msrp_cap_suv",
+              "label": "세액공제 MSRP 상한 - 밴/SUV/픽업(USD)",
+              "value": { "value": 80000, "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after", "note": "그 외 차종 $55,000" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "federal_new_ev_credit_sunset_date",
+              "label": "연방 신차 EV 세액공제 종료일",
+              "value": { "value": "2025-09-30", "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after", "note": "2025.9.30 이후 취득분 미적용(OBBBA 조기종료, 2-1)" },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "used_ev_credit_rate",
+              "label": "중고 클린 비클 세액공제율",
+              "value": { "value": 0.30, "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/used-clean-vehicle-credit", "note": "판매가의 30%(상한 적용)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "dealer_credit_reporting_required",
+              "label": "딜러 세액공제 정보 IRS 보고 의무",
+              "value": { "value": true, "year": 2025, "estimated": false, "source": "https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after", "note": "딜러가 IRS에 필요정보 보고(2-1)" },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "oem_ev_trim_expansion",
+              "label": "OEM EV 보급형 트림 확대",
+              "value": { "value": "Chevrolet Silverado EV LT 트림 추가", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/news/us/en/2024/oct/1007-silveradoev.html", "note": "일부 2025 Silverado EV 리테일 모델 세액공제 대상 가능" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "oem_home_charging_energy_partnership",
+              "label": "OEM 가정용 충전/에너지 연계",
+              "value": { "value": "GM-PG&E 파트너십", "year": 2025, "estimated": false, "source": "https://news.gm.com/home.detail.html/Pages/topic/us/en/2025/mar/0313-gmpge-annc.html", "note": "EV·에너지 통합 경험(2025.3)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "oem_charging_network_expansion",
+              "label": "OEM 충전 네트워크 옵션 확대",
+              "value": { "value": "Toyota bZ 충전 네트워크 확대", "year": 2026, "estimated": false, "source": "https://pressroom.toyota.com/2026-toyota-bz-goes-on-sale-with-upgraded-convenience-features-expanded-charging-network-options-for-all-toyota-bev-drivers/", "note": "모든 Toyota BEV 운전자 대상" },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        }
+      },
+      "refuted_claims": [
+        {
+          "claim": "중고 EV/연료전지차는 면허 딜러에서 $25,000 이하로 구매해야 자격이 있다.",
+          "vote": "1-2",
+          "source": "https://www.irs.gov/credits-deductions/used-clean-vehicle-credit",
+          "reason": "세부 조건 부정확으로 반박"
+        },
+        {
+          "claim": "신차 EV/PHEV/FCEV 연방 세액공제는 핵심광물·배터리부품 요건 충족 여부로 $7,500/$3,750/$0 분할된다.",
+          "vote": "0-3",
+          "source": "https://fueleconomy.gov/feg/tax2023.shtml",
+          "reason": "fueleconomy.gov 출처 기준 전원 반박"
+        }
+      ],
+      "research_stats": {
+        "angles": 5,
+        "sources_fetched": 23,
+        "claims_extracted": 67,
+        "claims_verified": 25,
+        "confirmed": 23,
+        "killed": 2,
+        "agent_calls": 105
+      }
+    }
+  ]
+}

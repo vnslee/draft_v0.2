@@ -1,0 +1,254 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 고객 세그먼트 JSON 초안 (DB 스키마 확정 전)",
+    "definition_doc": "requirements/data/01_market_landscape/01_customer_segment.md",
+    "data_year": 2025,
+    "domains": ["vehicle", "auto_finance"],
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, note?} 객체로 표기한다. estimated=true 는 추정치/미확정, false 는 확정 실측치. value=null 은 미확보(누락). 각 영역(domain)의 축(axis)별 세그먼트는 items[] 배열이며 complete=false 면 분류 미완성(해당 축 일부/전부 미확보).",
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정.",
+      "지어내기 금지: 미확보 데이터는 채워넣지 않는다(누락=미확보). 추정·통념 수치 미기재.",
+      "deep-research(적대적 검증) 통과 수치만 estimated=false 로 기재. 검증 미통과(UNVERIFIED)·반증(REFUTED) 수치는 미수록.",
+      "출처별 분모가 다름(registrations 신규등록 / sales 판매 / financing 금융취급 / AUM). basis 필드로 구분하며 교차 합산 금지.",
+      "국가 내에서도 시점이 상이할 수 있음(미국 차급=2025.5 CYTD·EV=연간·금융=분기 / 한국·인도 항목별 상이). 동일 스냅샷 아님.",
+      "한국: 1차 재조사에서 자동차 구조(수입차 점유·차체·연료·차급)와 리스 실행액은 확보. 단 CREFIA가 금융 채널 분해를 발표하지 않아 채널/신용등급 세부는 미확보.",
+      "인도: SIAM·CRISIL·ICRA·CRIF 1차 출처로 OEM 점유·UV비중·금융 채널·금리 확보. 동력원 믹스·금융 침투율은 검증 미완(미수록)."
+    ],
+    "verification": "deep-research workflow (fan-out search → fetch primary sources → adversarial verification). US: 24 confirmed/1 refuted. KR·IN: 중단된 워크플로우의 검증 통과(CONFIRMED) 항목만 수록 — 최종 종합 단계 미완료라 추후 재확인 권장.",
+    "open_gaps": [
+      "한국 금융: 채널(캡티브/은행/카드사/캐피탈 %)·신용등급 분포·평균 금리 미확보(CREFIA 채널 미발표, 금리는 검증 미통과).",
+      "한국 자동차: 가격대(price_tier)·구매연령 분포 검증 미통과(미수록).",
+      "인도 자동차: 동력원 믹스(ICE/CNG/HEV/EV) 출처별 분모 충돌로 검증 미통과(미수록).",
+      "인도 금융: 신차 금융 침투율(75~80%, CRISIL)·신용등급 분포 검증 미통과(미수록).",
+      "미국 자동차: 가격대·브랜드성격·연령·용도·ICE/HEV split 미확보. 미국 금융: 약정구조·고객유형 미확보."
+    ]
+  },
+  "segments": [
+    {
+      "country": "미국",
+      "country_code": "US",
+      "region": "미주",
+      "status": "부분확보",
+      "note": "차급(S&P Global Mobility, 2025.5 CYTD 신규등록), 동력원-EV(Cox/KBB, 2025 연간 판매), 금융 전반(Experian SAFM, Q1~Q4 2025) 검증 완료. 분모 상이 → 합산 금지.",
+      "vehicle": {
+        "segment_class": {
+          "complete": false,
+          "basis": "new retail registrations",
+          "note": "S&P Global Mobility, 2025년 5월 누계(CYTD). 아래 4개 세그먼트 합계 50.7%로 전체의 과반. 나머지 차급은 미확보.",
+          "items": [
+            { "name": "컴팩트 유틸리티 (소형 SUV/크로스오버)", "share": { "value": 0.21, "year": 2025, "estimated": false, "source": "S&P Global Mobility (2025.5 CYTD)", "note": "단일 최대 세그먼트" } },
+            { "name": "어퍼미드사이즈 유틸리티", "share": { "value": 0.123, "year": 2025, "estimated": false, "source": "S&P Global Mobility (2025.5 CYTD)", "note": "+0.2%p YoY" } },
+            { "name": "서브컴팩트+ 유틸리티", "share": { "value": 0.092, "year": 2025, "estimated": false, "source": "S&P Global Mobility (2025.5 CYTD)", "note": "10년 전 2.1%에서 급증" } },
+            { "name": "풀사이즈 하프톤 픽업", "share": { "value": 0.082, "year": 2025, "estimated": false, "source": "S&P Global Mobility (2025.5 CYTD)", "note": "10년 전 9%에서 감소" } }
+          ]
+        },
+        "price_tier": { "complete": false, "items": [] },
+        "brand_origin": { "complete": false, "items": [] },
+        "age": {
+          "complete": false,
+          "note": "Experian('Gen X가 최대 신차 구매 세그먼트') 출처 검색됐으나 정량 분포 검증 미통과 → 미확보.",
+          "items": []
+        },
+        "usage": { "complete": false, "items": [] },
+        "powertrain": {
+          "complete": false,
+          "basis": "sales (Cox/KBB) — registrations 기준은 별도 표기",
+          "note": "EV 비중만 확인. ICE/하이브리드 split 미확보.",
+          "items": [
+            { "name": "전기 (EV)", "share": { "value": 0.078, "year": 2025, "estimated": false, "source": "Cox Automotive·KBB Q4 2025 EV Sales Report (연간, 판매 기준)", "note": "2024년 8.1%에서 하락. 약 127.6만 대(2024년 기록 130만 대 대비 약 -2%). Q4 2025 EV 판매는 연방 세액공제 종료로 약 -36%." } },
+            { "name": "전기 (EV) — 신규등록 기준", "share": { "value": 0.074, "year": 2025, "estimated": false, "source": "S&P Global Mobility (registrations)", "note": "Cox/KBB의 sales 기준 7.8%와 방법론 차이. 동일 항목 아님." } },
+            { "name": "내연기관 (ICE)", "share": { "value": null, "year": 2025, "estimated": false, "source": null, "note": "미확보" } },
+            { "name": "하이브리드 (HEV)", "share": { "value": null, "year": 2025, "estimated": false, "source": null, "note": "미확보" } }
+          ]
+        }
+      },
+      "auto_finance": {
+        "product": {
+          "complete": false,
+          "basis": "financing (Experian SAFM)",
+          "note": "신차 거래 중 리스 비중. 할부/일시불/렌트 별도 비중은 미확보.",
+          "items": [
+            { "name": "신차 리스 (lease, 신차 거래 중 비중)", "share": { "value": 0.2437, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "전분기 24.87%에서 하락. Q1 2025 24.69%." } }
+          ]
+        },
+        "vehicle_state": {
+          "complete": true,
+          "basis": "financing (Experian SAFM)",
+          "note": "Q4 2025 기준. 연중 신차 42~43% / 중고 57~58%로 안정.",
+          "items": [
+            { "name": "신차 금융", "share": { "value": 0.422, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "전분기 41.20%에서 상승" } },
+            { "name": "중고차 금융", "share": { "value": 0.578, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "전분기 58.80%에서 하락" } }
+          ]
+        },
+        "channel": {
+          "complete": true,
+          "basis": "financing (Experian SAFM) — Experian 분류 체계(captive/bank/CU/finance company)",
+          "note": "Q4 2025 전체 시장 기준. 2025년 내 은행 상승·캡티브 하락 추세.",
+          "items": [
+            { "name": "은행 (Banks)", "share": { "value": 0.2929, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "Q1~Q4 2025 전체 시장 1위. 중고차에서 최대." } },
+            { "name": "캡티브 (제조사 금융)", "share": { "value": 0.2755, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "신차 한정 시 지배적: Q1 57.08% / Q2 52.39%. 중고차는 약 6~7%." } },
+            { "name": "크레딧유니온 (Credit Unions)", "share": { "value": 0.1956, "year": 2025, "estimated": false, "source": "Experian SAFM Q4 2025", "note": "전체 약 19.6~21%. 중고차에서 경쟁력." } },
+            { "name": "카드사", "share": { "value": null, "year": 2025, "estimated": false, "source": null, "note": "미국은 카드사 오토금융 채널 비중이 한국과 달라 별도 분류 없음 → 해당없음/미확보" } }
+          ]
+        },
+        "credit": {
+          "complete": false,
+          "basis": "financing (Experian SAFM, VantageScore 4.0)",
+          "note": "전체 시장 서브프라임 비중 + 신차 신규취급의 Prime+ 비중. 슈퍼프라임/프라임/니어프라임 세부 split은 차트 이미지라 추출 불가 → 미확보.",
+          "items": [
+            { "name": "서브프라임 (전체 시장)", "share": { "value": 0.1531, "year": 2025, "estimated": false, "source": "Experian Q4 2025", "note": "2024 Q4 14.54%에서 상승. 2021년 이후 4분기 기준 최대." } },
+            { "name": "신차 대출 Prime+ 비중", "share": { "value": 0.83, "year": 2025, "estimated": false, "source": "Experian SAFM Q2 2025", "note": ">83%(Q2)·>82%(Q3). 딥서브프라임 0.44~0.48%." } },
+            { "name": "신차 리스 Prime+ 비중", "share": { "value": 0.86, "year": 2025, "estimated": false, "source": "Experian SAFM Q2·Q3 2025", "note": "~86%. 딥서브프라임 0.27%. 리스가 대출보다 상위 신용층 편중." } },
+            { "name": "슈퍼프라임/프라임/니어프라임 세부 분포", "share": { "value": null, "year": 2025, "estimated": false, "source": null, "note": "Experian PDF 내 차트 이미지로 텍스트 추출 불가 → 미확보" } }
+          ]
+        },
+        "customer_type": { "complete": false, "items": [] },
+        "term": {
+          "complete": false,
+          "note": "평균 APR·평균 약정개월·잔가보장 관행 미확보. Fed G.19·NADA 출처 검색됐으나 검증 미통과.",
+          "items": []
+        },
+        "powertrain_interaction": {
+          "complete": false,
+          "basis": "financing (Experian SAFM)",
+          "note": "동력원×금융 교차 지표 (참고).",
+          "items": [
+            { "name": "EV 신차 중 리스 비율", "share": { "value": 0.58, "year": 2025, "estimated": false, "source": "Experian SAFM Q2 2025", "note": "약 58%가 리스. EV는 전체 신차 리스의 20%+. Q2 EV 신차 구매 비중은 9% 미만(Q1 9.83%)." } }
+          ]
+        }
+      }
+    },
+    {
+      "country": "한국",
+      "country_code": "KR",
+      "region": "아시아 & 태평양",
+      "status": "부분확보",
+      "note": "한국어 1차 출처 재조사 결과. 자동차 구조(수입차 점유·차체·연료·차급)와 리스 실행액은 검증 통과. 금융 채널/신용등급은 CREFIA 미발표로 미확보. 중단된 워크플로우의 CONFIRMED 항목만 수록 — 추후 재확인 권장.",
+      "vehicle": {
+        "segment_class": {
+          "complete": false,
+          "basis": "registrations (신규등록)",
+          "note": "2025 Q3 누계 신규등록 기준 차급 믹스.",
+          "items": [
+            { "name": "중형", "share": { "value": 0.317, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } },
+            { "name": "준중형", "share": { "value": 0.265, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } },
+            { "name": "대형", "share": { "value": 0.144, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } },
+            { "name": "풀사이즈", "share": { "value": 0.117, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } },
+            { "name": "소형", "share": { "value": 0.109, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } },
+            { "name": "경형", "share": { "value": 0.048, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록" } }
+          ]
+        },
+        "price_tier": { "complete": false, "items": [] },
+        "brand_origin": {
+          "complete": false,
+          "basis": "신규등록/판매",
+          "note": "국산 vs 수입 점유. 출처별 분모·시점 상이 → 합산 금지.",
+          "items": [
+            { "name": "수입차 (승용 기준)", "share": { "value": 0.183, "year": 2024, "estimated": false, "source": "KAIDA", "basis": "신규등록", "note": "전체 등록 기준으로는 13.3%" } },
+            { "name": "수입차 (전체)", "share": { "value": 0.20, "year": 2025, "estimated": false, "source": "카이즈유(2025 1~10월)", "basis": "판매", "note": "사상 첫 20% 돌파" } },
+            { "name": "국산차", "share": { "value": 0.819, "year": 2025, "estimated": false, "source": "카이즈유(2025 Q3 누계)", "basis": "신규등록", "note": "수입 18.1%의 보수" } }
+          ]
+        },
+        "age": { "complete": false, "note": "연령대 분포는 검증 미통과(UNVERIFIED) → 미수록.", "items": [] },
+        "usage": { "complete": false, "items": [] },
+        "powertrain": {
+          "complete": false,
+          "basis": "신규등록(수입) / 판매(국산)",
+          "note": "수입차 연료믹스는 신규등록 기준, 국산 친환경차는 내수판매 기준. 분모 상이 → 합산 금지. 전체(국산+수입) 동력원 통합 믹스는 검증 미통과로 미수록.",
+          "items": [
+            { "name": "수입 HEV", "share": { "value": 0.567, "year": 2025, "estimated": false, "source": "KAIDA(2025 연간)", "basis": "신규등록(수입차)" } },
+            { "name": "수입 EV", "share": { "value": 0.297, "year": 2025, "estimated": false, "source": "KAIDA(2025 연간)", "basis": "신규등록(수입차)" } },
+            { "name": "수입 가솔린", "share": { "value": 0.125, "year": 2025, "estimated": false, "source": "KAIDA(2025 연간)", "basis": "신규등록(수입차)" } },
+            { "name": "수입 디젤", "share": { "value": 0.011, "year": 2025, "estimated": false, "source": "KAIDA(2025 연간)", "basis": "신규등록(수입차)" } },
+            { "name": "국산 친환경차(HEV+EV+FCEV)", "share": { "value": null, "year": 2025, "estimated": false, "source": "KAMA(2025 1~11월)", "basis": "내수판매", "note": "비율 미확보. 판매량 745,983대(+26.6%)는 확인." } }
+          ]
+        }
+      },
+      "auto_finance": {
+        "product": {
+          "complete": false,
+          "basis": "financing (리스실행액)",
+          "note": "CREFIA 리스 실행액. 할부/렌트/일시불 비중은 산업 전체 분해 미발표 → 미확보(현대캐피탈 단일 자사 수치는 산업대표성 없어 미수록).",
+          "items": [
+            { "name": "자동차 리스 실행액", "share": { "value": null, "year": 2025, "estimated": false, "source": "CREFIA(여신금융협회)", "basis": "리스실행액", "note": "약 14.34조원. 비율 아님(절대액)." } },
+            { "name": "전체 리스 중 운수운반기기 비중", "share": { "value": 0.82, "year": 2025, "estimated": false, "source": "CREFIA(여신금융협회)", "basis": "리스실행액", "note": "14.39조/17.56조" } }
+          ]
+        },
+        "vehicle_state": { "complete": false, "note": "신차 vs 중고 금융 비중은 산업 전체 검증 미통과 → 미수록.", "items": [] },
+        "channel": { "complete": false, "note": "캡티브/은행/카드사/캐피탈 채널 split 미확보 — CREFIA가 채널별 분해를 발표하지 않음.", "items": [] },
+        "credit": { "complete": false, "note": "신용등급 분포 미확보.", "items": [] },
+        "customer_type": { "complete": false, "items": [] },
+        "term": { "complete": false, "note": "평균 금리(신차 할부 4.9%/중고 7.5% 등)는 검증 미통과(UNVERIFIED) → 미수록.", "items": [] }
+      }
+    },
+    {
+      "country": "인도",
+      "country_code": "IN",
+      "region": "아시아",
+      "entry_status": "진출 예정",
+      "status": "부분확보",
+      "note": "SIAM·CRISIL·ICRA·CRIF 1차 출처. OEM 점유·UV비중·금융 채널·금리 검증 통과. 동력원 믹스·금융 침투율은 검증 미완으로 미수록. 중단된 워크플로우의 CONFIRMED 항목만 수록.",
+      "vehicle": {
+        "segment_class": {
+          "complete": false,
+          "basis": "sales (SIAM wholesale) / CRISIL",
+          "note": "UV=SUV+MPV(SIAM 분류)와 SUV 차체기준(CRISIL 협의)은 정의가 달라 합산·비교 불가. FY2016 승용 72%에서 UV로 역전된 구조 변화.",
+          "items": [
+            { "name": "UV (SUV+MPV)", "share": { "value": 0.65, "year": 2025, "estimated": false, "source": "SIAM via Autocar Pro", "basis": "판매(FY2025)", "note": "UV 판매 2,797,229대(+11%)" } },
+            { "name": "승용차 (해치백+세단)", "share": { "value": 0.31, "year": 2025, "estimated": false, "source": "SIAM via Autocar Pro", "basis": "판매(FY2025)" } },
+            { "name": "SUV (차체 기준, 협의)", "share": { "value": 0.51, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)", "note": "FY2019 23%서 상승. SIAM의 UV(65%)와 정의 다름." } },
+            { "name": "해치백 (차체 기준)", "share": { "value": 0.28, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)", "note": "FY2019 47%서 하락" } }
+          ]
+        },
+        "price_tier": { "complete": false, "items": [] },
+        "brand_origin": {
+          "complete": false,
+          "basis": "sales",
+          "note": "OEM 점유율(대부분 현지 생산). FY2024 CRISIL 기준.",
+          "items": [
+            { "name": "마루티스즈키", "share": { "value": 0.42, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)", "note": "FY2019 52%서 하락" } },
+            { "name": "타타모터스", "share": { "value": 0.14, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)", "note": "FY2019 6%서 상승" } },
+            { "name": "마힌드라", "share": { "value": 0.11, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)" } },
+            { "name": "상위 4사 합계 (마루티+현대+타타+마힌드라)", "share": { "value": 0.80, "year": 2024, "estimated": false, "source": "CRISIL", "basis": "판매(FY2024)" } }
+          ]
+        },
+        "age": { "complete": false, "items": [] },
+        "usage": { "complete": false, "items": [] },
+        "powertrain": { "complete": false, "note": "동력원 믹스(ICE/CNG/HEV/EV)는 출처별 분모 충돌로 검증 미통과(가솔린 57.5~63%, CNG 15~21%, EV 2.3~3.7% 등 상충) → 미수록.", "items": [] }
+      },
+      "auto_finance": {
+        "product": { "complete": false, "note": "loan/lease/cash 비중 검증 미통과. 인도는 리스 비중 매우 낮음(정성).", "items": [] },
+        "vehicle_state": {
+          "complete": false,
+          "basis": "financing (NBFC AUM)",
+          "note": "NBFC 차량금융 AUM 내 중고 비중 및 성장 추세. 신차 금융 침투율(75~80%)은 검증 미통과 → 미수록.",
+          "items": [
+            { "name": "중고차 비중 (NBFC AUM, 상용차 CV)", "share": { "value": 0.53, "year": 2025, "estimated": false, "source": "ICRA(2025.9)", "basis": "금융(AUM)" } },
+            { "name": "중고차 비중 (NBFC AUM, 승용차 PV)", "share": { "value": 0.42, "year": 2025, "estimated": false, "source": "ICRA(2025.9)", "basis": "금융(AUM)" } }
+          ]
+        },
+        "channel": {
+          "complete": false,
+          "basis": "financing (originations / AUM)",
+          "note": "오토론 신규취급 건수 기준 채널 점유(CRIF, Q1 FY26). NBFC가 건수 1위, PSU은행이 금액 강세.",
+          "items": [
+            { "name": "NBFC (건수 기준)", "share": { "value": 0.414, "year": 2025, "estimated": false, "source": "CRIF High Mark(Q1 FY26, 2025.6)", "basis": "금융(신규취급 건수)" } },
+            { "name": "PSU 은행 (건수 기준)", "share": { "value": 0.361, "year": 2025, "estimated": false, "source": "CRIF High Mark(Q1 FY26, 2025.6)", "basis": "금융(신규취급 건수)", "note": "Q1 FY25 34.3%서 상승" } },
+            { "name": "민간 은행 (건수 기준)", "share": { "value": 0.282, "year": 2025, "estimated": false, "source": "CRIF High Mark(Q1 FY26, 2025.6)", "basis": "금융(신규취급 건수)" } },
+            { "name": "차량금융이 NBFC 전체 AUM에서 차지하는 비중", "share": { "value": 0.23, "year": 2025, "estimated": false, "source": "ICRA(2025.9)", "basis": "금융(AUM)", "note": "2021 26%서 하락" } }
+          ]
+        },
+        "credit": { "complete": false, "items": [] },
+        "customer_type": { "complete": false, "items": [] },
+        "term": {
+          "complete": false,
+          "basis": "financing",
+          "note": "승용차 금융 평균 금리만 확보. 평균 약정기간(tenure)은 검증 미통과.",
+          "items": [
+            { "name": "승용차(PV) 금융 평균 금리", "share": { "value": 0.10, "year": 2025, "estimated": false, "source": "CRISIL MI&A", "basis": "금융", "note": "은행 평균 약 9.8%. (share가 아니라 금리값)" } }
+          ]
+        }
+      }
+    }
+  ]
+}

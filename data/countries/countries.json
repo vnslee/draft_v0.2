@@ -1,0 +1,1036 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 국가 정보 JSON 초안 (DB 스키마 확정 전)",
+    "data_year": 2025,
+    "sources": {
+      "population": "UN World Population Prospects 2024 (2025 medium-variant projection, via database.earth)",
+      "automotive": "각국 2025 풀이어 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+      "gdp": "IMF World Economic Outlook 2025 (명목 GDP) / 각국 통계청·중앙은행(실질 성장률). 기준 2025년."
+    },
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정.",
+      "지어내기 금지: 미확보 데이터는 채워넣지 않는다(누락=미확보).",
+      "각 데이터 필드는 신뢰성 메타(year/estimated/source)를 함께 보관 → agent가 출처·연도·추정여부를 그대로 표시 가능.",
+      "인구는 UN WPP 2025 중위추계(=추정). GDP 명목은 IMF WEO, 2025 미발표국(호주·폴란드)은 2024치(estimated=true).",
+      "bestseller.brands 의 group(OEM) 별도 수집은 미주 외 brand 와 중복되어 생략. 미국 brands 는 그룹 기준."
+    ],
+    "gdp_data_year": 2025,
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, note?} 객체로 표기한다. estimated=true 는 추정치/미확정, false 는 확정 실측치. bestseller.brands/models 는 {year, source, complete, note?, items[]} 구조이며 complete=false 면 Top5 미완성."
+  },
+  "countries": [
+    {
+      "name": "한국",
+      "region": "아시아 & 태평양",
+      "entry_status": "진출",
+      "population": {
+        "value": 51667029,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 1870000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.01,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook",
+          "note": "한국은행(BOK) 확정"
+        }
+      },
+      "automotive": {
+        "primary_oem": "현대차그룹",
+        "oem_global_rank": 3,
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "현대",
+                "share": 0.355
+              },
+              {
+                "rank": 2,
+                "name": "기아",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "제네시스",
+                "share": 0.071
+              },
+              {
+                "rank": 4,
+                "name": "BMW",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Mercedes-Benz",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "기아 쏘렌토"
+              },
+              {
+                "rank": 2,
+                "name": "현대 아반떼"
+              },
+              {
+                "rank": 3,
+                "name": "기아 카니발"
+              },
+              {
+                "rank": 4,
+                "name": "기아 스포티지"
+              },
+              {
+                "rank": 5,
+                "name": "현대 그랜저"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "호주",
+      "region": "아시아 & 태평양",
+      "entry_status": "진출",
+      "population": {
+        "value": 26974026,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 1750000000000,
+          "year": 2024,
+          "estimated": true,
+          "source": "IMF World Economic Outlook",
+          "note": "2025 명목 미확보 → 2024 IMF치 사용"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.026,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 완성차 생산 종료(2017)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Toyota",
+                "share": 0.193
+              },
+              {
+                "rank": 2,
+                "name": "Ford",
+                "share": 0.076
+              },
+              {
+                "rank": 3,
+                "name": "Mazda",
+                "share": 0.074
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Ford Ranger"
+              },
+              {
+                "rank": 2,
+                "name": "Toyota RAV4"
+              },
+              {
+                "rank": 3,
+                "name": "Toyota HiLux"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "중국",
+      "region": "아시아 & 태평양",
+      "entry_status": "진출",
+      "population": {
+        "value": 1416096094,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 19400000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.05,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": "BYD",
+        "oem_global_rank": 6,
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "note": "연간 확정 순위는 출처별 변동 있음",
+            "items": [
+              {
+                "rank": 1,
+                "name": "BYD",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Geely",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "Volkswagen",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Changan",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Chery",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "개별 모델 Top5 미확보 (BYD Dynasty/Ocean 시리즈 중심으로만 확인됨)",
+            "items": []
+          }
+        }
+      }
+    },
+    {
+      "name": "미국",
+      "region": "미주",
+      "entry_status": "진출",
+      "population": {
+        "value": 347275808,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 30600000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.021,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook",
+          "note": "BEA"
+        }
+      },
+      "automotive": {
+        "primary_oem": "GM",
+        "oem_global_rank": 4,
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "note": "그룹(OEM) 기준",
+            "items": [
+              {
+                "rank": 1,
+                "name": "GM",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Toyota",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "Ford",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Honda",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Stellantis",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Ford F-Series"
+              },
+              {
+                "rank": 2,
+                "name": "Chevrolet Silverado"
+              },
+              {
+                "rank": 3,
+                "name": "Toyota RAV4"
+              },
+              {
+                "rank": 4,
+                "name": "Chevrolet Equinox"
+              },
+              {
+                "rank": 5,
+                "name": "Toyota Camry"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "캐나다",
+      "region": "미주",
+      "entry_status": "진출",
+      "population": {
+        "value": 40126723,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 2284000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.017,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 OEM 없음 (외국계 생산기지)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Ford",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Toyota",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "Chevrolet",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Ford F-Series"
+              },
+              {
+                "rank": 2,
+                "name": "Toyota RAV4"
+              },
+              {
+                "rank": 3,
+                "name": "GMC Sierra"
+              },
+              {
+                "rank": 4,
+                "name": "Chevrolet Silverado"
+              },
+              {
+                "rank": 5,
+                "name": "Honda CR-V"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "독일",
+      "region": "유럽",
+      "entry_status": "진출",
+      "population": {
+        "value": 84075075,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 5000000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.002,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook",
+          "note": "Destatis"
+        }
+      },
+      "automotive": {
+        "primary_oem": "폭스바겐 그룹",
+        "oem_global_rank": 2,
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Volkswagen",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Mercedes-Benz",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "BMW",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Skoda",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Audi",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "VW Golf"
+              },
+              {
+                "rank": 2,
+                "name": "VW T-Roc"
+              },
+              {
+                "rank": 3,
+                "name": "VW Tiguan"
+              },
+              {
+                "rank": 4,
+                "name": "Opel Corsa"
+              },
+              {
+                "rank": 5,
+                "name": "BMW X1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "러시아",
+      "region": "유럽",
+      "entry_status": "진출",
+      "population": {
+        "value": 143997393,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 2541000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.01,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": "AvtoVAZ(Lada)",
+        "oem_global_rank": null,
+        "oem_note": "글로벌 Top10 외",
+        "bestseller": {
+          "ranking_basis": "대수(unit) 기준 — 금액 기준이면 Haval 1위로 변동",
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Lada",
+                "share": 0.234
+              },
+              {
+                "rank": 2,
+                "name": "Chery",
+                "share": 0.112
+              },
+              {
+                "rank": 3,
+                "name": "Haval",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Geely",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Changan",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "note": "순위 변동 있음",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Lada Granta"
+              },
+              {
+                "rank": 2,
+                "name": "Lada Vesta"
+              },
+              {
+                "rank": 3,
+                "name": "Haval Jolion"
+              },
+              {
+                "rank": 4,
+                "name": "Chery Tiggo 7 Pro Max"
+              },
+              {
+                "rank": 5,
+                "name": "Belgee X50"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "인도",
+      "region": "아시아 & 태평양",
+      "entry_status": "진출예정",
+      "population": {
+        "value": 1463865525,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 4130000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.071,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook",
+          "note": "회계연도 기준 FY2024-25 +7.1% (FY2025-26 추정 +7.6%)"
+        }
+      },
+      "automotive": {
+        "primary_oem": "Tata Motors / Mahindra",
+        "oem_global_rank": null,
+        "oem_note": "글로벌 Top10 외",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Maruti Suzuki",
+                "share": 0.4
+              },
+              {
+                "rank": 2,
+                "name": "Mahindra",
+                "share": 0.1325
+              },
+              {
+                "rank": 3,
+                "name": "Hyundai",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Tata",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Toyota",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Maruti Suzuki Dzire"
+              },
+              {
+                "rank": 2,
+                "name": "Hyundai Creta"
+              },
+              {
+                "rank": 3,
+                "name": "Tata Nexon"
+              },
+              {
+                "rank": 4,
+                "name": "Maruti Ertiga"
+              },
+              {
+                "rank": 5,
+                "name": "Maruti Wagon R"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "인도네시아",
+      "region": "아시아 & 태평양",
+      "entry_status": "진출예정",
+      "population": {
+        "value": 285721236,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 1443000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.0511,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 OEM 없음 (일본계 생산 중심)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Toyota",
+                "share": 0.312
+              },
+              {
+                "rank": 2,
+                "name": "Daihatsu",
+                "share": 0.163
+              },
+              {
+                "rank": 3,
+                "name": "Mitsubishi",
+                "share": null
+              },
+              {
+                "rank": 4,
+                "name": "Suzuki",
+                "share": null
+              },
+              {
+                "rank": 5,
+                "name": "Honda",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Toyota Kijang Innova"
+              },
+              {
+                "rank": 2,
+                "name": "Daihatsu Gran Max PU"
+              },
+              {
+                "rank": 3,
+                "name": "Toyota Avanza"
+              },
+              {
+                "rank": 4,
+                "name": "Daihatsu Sigra"
+              },
+              {
+                "rank": 5,
+                "name": "Honda Brio"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "멕시코",
+      "region": "미주",
+      "entry_status": "진출예정",
+      "population": {
+        "value": 131946900,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 1832000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.006,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 OEM 없음 (외국계 생산기지)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Nissan",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Chevrolet",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "Volkswagen",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Nissan Versa"
+              },
+              {
+                "rank": 2,
+                "name": "Chevrolet Aveo"
+              },
+              {
+                "rank": 3,
+                "name": "Nissan NP300"
+              },
+              {
+                "rank": 4,
+                "name": "Kia K3"
+              },
+              {
+                "rank": 5,
+                "name": "Nissan March"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "영국",
+      "region": "유럽",
+      "entry_status": "진출예정",
+      "population": {
+        "value": 69551332,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 3700000000000,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.013,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 독립 OEM 없음 (JLR은 Tata 산하)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Volkswagen",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "BMW",
+                "share": null
+              },
+              {
+                "rank": 3,
+                "name": "Ford",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 3개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Ford Puma"
+              },
+              {
+                "rank": 2,
+                "name": "Kia Sportage"
+              },
+              {
+                "rank": 3,
+                "name": "Nissan Qashqai"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "폴란드",
+      "region": "유럽",
+      "entry_status": "진출예정",
+      "population": {
+        "value": 38140910,
+        "year": 2025,
+        "estimated": true,
+        "source": "UN World Population Prospects 2024 (medium variant)"
+      },
+      "economy": {
+        "gdp_nominal_usd": {
+          "value": 914700000000,
+          "year": 2024,
+          "estimated": true,
+          "source": "IMF World Economic Outlook",
+          "note": "2025 명목 미확보 → 2024 IMF치 사용"
+        },
+        "gdp_growth_yoy": {
+          "value": 0.036,
+          "year": 2025,
+          "estimated": false,
+          "source": "IMF World Economic Outlook"
+        }
+      },
+      "automotive": {
+        "primary_oem": null,
+        "oem_global_rank": null,
+        "oem_note": "자국 OEM 없음 (외국계 생산기지)",
+        "bestseller": {
+          "brands": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": false,
+            "note": "Top5 중 2개만 확보 (나머지 미확보)",
+            "items": [
+              {
+                "rank": 1,
+                "name": "Toyota",
+                "share": null
+              },
+              {
+                "rank": 2,
+                "name": "Skoda",
+                "share": null
+              }
+            ]
+          },
+          "models": {
+            "year": 2025,
+            "source": "각국 2025 신차 판매 통계 (focus2move / best-selling-cars.com / bestsellingcarsblog 등)",
+            "complete": true,
+            "items": [
+              {
+                "rank": 1,
+                "name": "Toyota Corolla"
+              },
+              {
+                "rank": 2,
+                "name": "Skoda Octavia"
+              },
+              {
+                "rank": 3,
+                "name": "Toyota C-HR"
+              },
+              {
+                "rank": 4,
+                "name": "Kia Sportage"
+              },
+              {
+                "rank": 5,
+                "name": "Toyota Yaris Cross"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

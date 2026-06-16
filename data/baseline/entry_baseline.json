@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 진출 baseline(실측 기간/비용) 목업. 권역별 이미 진출한 기준국가가 실제로 쓴 진출 기간·비용. 후보국과 기준국의 유사도로 배수(multiplier)를 매겨 진출 소요기간/비용을 추정하는 데 사용.",
+    "status": "MOCKUP — 1차 MVP용 가짜 데이터. 실제 진출 실적으로 교체 예정.",
+    "data_year": 2025,
+    "_REPLACE_ME": "⚠️ 이 파일의 duration_months / cost_usd 값은 전부 임의 목업입니다. 실제 사내 진출 실적(법인설립~라이선스취득~영업개시 기간, 누적 비용)으로 교체하세요. 교체 방법은 reports/agent_similarity_design.md §7.2 및 이 폴더 README 참조.",
+    "field_schema": "각 baseline 항목은 {country, country_code, region, duration_months, cost_usd, scope, estimated, source, note} 구조. estimated=true 는 목업/추정, false 는 실측 확정. 실데이터 교체 시 estimated=false 로 변경.",
+    "how_to_use": "후보국 진출 추정 = 같은 region 의 baseline 국가 값 × multiplier(유사도). 예) 멕시코(미주) 추정 = 미국 baseline 12개월 × 1.2(유사도 0.8) = 14.4개월.",
+    "regions": ["미주", "유럽", "아시아 & 태평양"]
+  },
+
+  "baselines": [
+    {
+      "country": "미국",
+      "country_code": "US",
+      "region": "미주",
+      "is_region_default": true,
+      "duration_months": {
+        "value": 12,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 법인설립~주별 lender license(NMLS) 취득~영업개시 가정. 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 1500000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 라이선스·법무·자본확충·초기운영 누적 가정. 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출 — 법인설립부터 영업개시까지",
+      "note": "미주 권역 대표 baseline. 멕시코 등 미주 후보국 추정의 기준."
+    },
+    {
+      "country": "캐나다",
+      "country_code": "CA",
+      "region": "미주",
+      "is_region_default": false,
+      "duration_months": {
+        "value": 10,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 미국 대비 단일 연방감독 가정으로 약간 짧게. 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 1200000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출",
+      "note": "미주 보조 baseline."
+    },
+    {
+      "country": "독일",
+      "country_code": "DE",
+      "region": "유럽",
+      "is_region_default": true,
+      "duration_months": {
+        "value": 14,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] BaFin+Bundesbank 공동심사 가정. 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 2000000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 대출업 최소자본 €5M 반영 가정. 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출",
+      "note": "유럽 권역 대표 baseline. 스페인·영국·폴란드 추정의 기준."
+    },
+    {
+      "country": "러시아",
+      "country_code": "RU",
+      "region": "유럽",
+      "is_region_default": false,
+      "duration_months": {
+        "value": 16,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 1800000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출",
+      "note": "유럽 보조 baseline."
+    },
+    {
+      "country": "한국",
+      "country_code": "KR",
+      "region": "아시아 & 태평양",
+      "is_region_default": true,
+      "duration_months": {
+        "value": 9,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 여전법 등록제(리스·할부·신기술) 가정으로 비교적 짧게. 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 1300000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 신기술금융 자본금 100억원 등 반영 가정. 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출 — 본사 소재국",
+      "note": "아시아&태평양 권역 대표 baseline. 인도·인도네시아 추정의 기준."
+    },
+    {
+      "country": "호주",
+      "country_code": "AU",
+      "region": "아시아 & 태평양",
+      "is_region_default": false,
+      "duration_months": {
+        "value": 11,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 1400000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출",
+      "note": "아시아&태평양 보조 baseline."
+    },
+    {
+      "country": "중국",
+      "country_code": "CN",
+      "region": "아시아 & 태평양",
+      "is_region_default": false,
+      "duration_months": {
+        "value": 18,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 외자 규제 가정으로 길게. 실측 교체 필요."
+      },
+      "cost_usd": {
+        "value": 2500000,
+        "estimated": true,
+        "source": "MOCKUP",
+        "note": "[목업] 실측 교체 필요."
+      },
+      "scope": "캐피탈(여신전문) 신규 진출",
+      "note": "아시아&태평양 보조 baseline."
+    }
+  ],
+
+  "multiplier_table": {
+    "_REPLACE_ME": "⚠️ 유사도 구간별 배수도 목업 기준값입니다. 실제 진출 실적으로 보정하세요. (design §7.2)",
+    "estimated": true,
+    "bands": [
+      { "min": 0.9, "max": 1.01, "duration_x": 1.0, "label": "거의 동일 — baseline 그대로" },
+      { "min": 0.8, "max": 0.9,  "duration_x": 1.2, "label": "약간 차이 — 20% 추가" },
+      { "min": 0.6, "max": 0.8,  "duration_x": 1.5, "label": "보통 차이" },
+      { "min": 0.4, "max": 0.6,  "duration_x": 2.0, "label": "상당 차이" },
+      { "min": 0.0, "max": 0.4,  "duration_x": 2.5, "label": "큰 차이 — 별도 조사 권장" }
+    ],
+    "note": "duration_x 와 동일 배수를 cost 에도 적용(MVP). 추후 기간/비용 배수 분리 가능."
+  }
+}

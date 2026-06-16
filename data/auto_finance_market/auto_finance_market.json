@@ -1,0 +1,339 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 자동차 금융 시장(오토 금융) JSON 초안 (DB 스키마 확정 전). 국가 간 오토 금융 시장 유사도 비교/스코어링용.",
+    "definition_doc": "requirements/data/02_regulations/PROCESS_auto_finance_market.md",
+    "source_report": "reports/auto_finance_market_DE_ES_2025.md",
+    "data_year": 2025,
+    "purpose": "국가별 오토 금융 시장을 동일한 축(dimension) 체계로 구조화하여 타 국가와 유사도 비교·스코어링에 활용한다. 축·aspect 체계가 국가 간 동일해야 비교가 성립한다. 예: 독일이 조사된 상태에서 신규 국가(체코 등)를 같은 축으로 조사하면 두 국가 유사도를 산출할 수 있다.",
+    "dimensions": ["penetration", "channel_mix", "product_structure", "key_players"],
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, quote?, note?, status?} 객체로 표기한다. estimated=true 는 추정/미확정, false 는 적대적 검증 통과 확정 실측치. value=null (또는 status='공식 자료에서 확인 불가') 은 미확보(누락≠0, 지어내기 금지). 각 attribute 에 'key'(국가 공통 비교키)와 'aspect'(유사도 비교 그룹), 'metric_type'(정량 수치 정규화 단위 힌트)을 부여한다.",
+    "comparison_keys": {
+      "key": "국가 공통 비교키. 동일 key 끼리 국가 간 비교/스코어링 (1:1).",
+      "aspect": "유사도 비교 그룹. 정의(분모)가 다른 수치를 잘못 짝짓지 않도록 aspect 가 같은 것끼리만 비교한다. (가장 중요)",
+      "metric_type": "수치 정규화 힌트. ratio_pct=비율(소수로 통일), eur=유로금액, count=건수/대수. 단위 다른 값 직접 비교 금지."
+    },
+    "critical_caveat": "침투율(penetration) 정의가 출처별로 다르다. 독일 BFACH 41%=가계 보유차량 중 금융비율(설문), BDL 48%=신규등록 대비 리스만, 스페인 AER 25.74%=총등록 대비 운용리스(renting)만(할부+PCP 미포함). 따라서 aspect 가 동일한 항목끼리만 유사도 비교할 것. 스페인의 '할부+PCP 포함 전체 침투율'은 미확보(2차 조사 과제). 캡티브 침투율(VW 34.1%, VWFS 독일 66.8%/스페인 41.3%)은 각사 그룹 인도 기준 내부 지표로 국가 전체 시장점유율(%)이 아님.",
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정 (저장 유형 미정).",
+      "지어내기 금지: 미확보 데이터는 채워넣지 않는다(value=null, status 명시).",
+      "출처 제약: 공식 1차 자료만(정부 KBA, 협회 BFACH/BDL/VDA/ANFAC/AER/Leaseurope, 기업 IR VW Group/VWFS AG/Santander Consumer Finance). 뉴스·블로그 배제.",
+      "deep-research(3표 적대적 검증) 통과 항목만 verified=true. 반증(REFUTED) 항목은 refuted_claims[]에 별도 보관, attributes[]에는 미수록.",
+      "verification.vote 는 'confirm-refute' 표 (예: '3-0', '2-1'). 2/3 이상 반박 시 폐기.",
+      "기준 시점: 대부분 FY2024 결산 기준(2025 연차보고서 미발행). 독일 channel_mix 만 FY2025(KBA/VDA)까지 확보."
+    ],
+    "verification": "deep-research workflow (fan-out search → fetch primary sources → adversarial verification). DE/ES: 5 angles → 24 sources fetched → 82 claims → 25 verified → 19 confirmed / 6 refuted → 9 synthesized.",
+    "scoring_hint": "국가 간 유사도는 동일 dimension·동일 aspect 의 (존재여부 + value 근접도 + 정성 라벨/stance 일치)로 산출 권장. value=null(미확보)는 비교에서 제외하거나 별도 패널티 처리. aspect 가 다르면(정의 분모 상이) 비교 불성립. 통화(eur)·비율(ratio_pct)·건수(count) 정규화 후 비교.",
+    "open_gaps": [
+      "스페인: 할부(financiación)+PCP 포함 전체 오토금융 침투율(신차/중고차 판매 대비) 미확보 — ASNEF/ANFAC·AECOC 필요.",
+      "독일·스페인: 캡티브 vs 일반 은행 시장점유율(%)을 단일 분모로 환산한 공식 데이터 미확보(현재 각사 절대 수치만).",
+      "스페인: PCP/잔가보증(valor futuro garantizado) 분리 비중 미확보 — ASNEF/AELR.",
+      "독일: 상용차(LCV/트럭) 금융 채널·상품 구조 미확보 — Daimler Truck FS/Traton FS. 본 조사는 승용차 중심."
+    ]
+  },
+  "markets": [
+    {
+      "country": "독일",
+      "country_code": "DE",
+      "region": "유럽",
+      "status": "부분확보",
+      "data_year": 2025,
+      "note": "신차 등록 법인 우위 구조(약 2/3). 캡티브(VWFS 등) 금융 주도. 소비자 선호는 할부>리스>3-way이나 캡티브 신규계약 기준은 리스 우세.",
+      "dimensions": {
+        "penetration": {
+          "complete": true,
+          "note": "BFACH(보유차 기준 설문)와 BDL(신규등록 대비 리스)은 분모가 다름. aspect 로 구분.",
+          "attributes": [
+            {
+              "key": "fin_penetration_owned_total",
+              "aspect": "penetration_owned_survey",
+              "label": "가계 보유 승용차 중 금융(신용+리스) 비율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 41, "year": 2024, "estimated": false, "source": "Bankenfachverband/IPSOS, Marktstudie Konsumfinanzierung 2024", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "41% PKW insgesamt / 49% Neuwagen / 36% Gebrauchtwagen", "note": "보유차량 기준 설문(n=1,700). 판매대수 침투율과 정의 다름." },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "fin_penetration_new_owned",
+              "aspect": "penetration_owned_survey",
+              "label": "보유 신차 중 금융 비율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 49, "year": 2024, "estimated": false, "source": "Bankenfachverband/IPSOS, Marktstudie Konsumfinanzierung 2024", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "49% Neuwagen", "note": "추이: 46%(2020)→49%(2024)" },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "fin_penetration_used_owned",
+              "aspect": "penetration_owned_survey",
+              "label": "보유 중고차 중 금융 비율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 36, "year": 2024, "estimated": false, "source": "Bankenfachverband/IPSOS, Marktstudie Konsumfinanzierung 2024", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "36% Gebrauchtwagen", "note": "추이: 27%(2020)→36%(2024) 상승" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "lease_penetration_new_reg",
+              "aspect": "penetration_lease_newreg",
+              "label": "신차 신규등록 대비 리스 점유율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 48, "year": 2024, "estimated": false, "source": "BDL (Bundesverband Deutscher Leasing-Unternehmen), Marktbericht 2024", "doc_ref": "https://jahresbericht.leasingverband.de/leasing-markt-und-umfeld/marktbericht-2024/", "quote": "Marktanteil von Leasing an den Neuzulassungen stieg 2024 auf rund 48%", "note": "IW Köln 정밀치 48.4%. 승용차 리스가 전체 신규 리스계약의 약 2/3." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        },
+        "channel_mix": {
+          "complete": true,
+          "note": "신차 등록 보유자(Halter) 기준 개인/법인 분할. FY2024·FY2025 모두 확보. 상용차(LCV/트럭) 세부는 미확보.",
+          "attributes": [
+            {
+              "key": "newreg_commercial_share",
+              "aspect": "channel_private_vs_commercial",
+              "label": "신차 등록 중 법인/상용(gewerblich) 비중",
+              "metric_type": "ratio_pct",
+              "value": { "value": 67.5, "year": 2024, "estimated": false, "source": "KBA (Kraftfahrt-Bundesamt), Pressemitteilung pm01/2025", "doc_ref": "https://www.kba.de/DE/Presse/Pressemitteilungen/Fahrzeugzulassungen/2025/pm01_2025_n_12_24_pm_komplett.html", "quote": "Im Jahresverlauf entfielen 67,5 Prozent auf gewerbliche Neuzulassungen", "note": "FY2025(KBA pm01/2026): 법인 66.1%(−0.6%)" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "newreg_private_share",
+              "aspect": "channel_private_vs_commercial",
+              "label": "신차 등록 중 개인(privat) 비중",
+              "metric_type": "ratio_pct",
+              "value": { "value": 32.5, "year": 2024, "estimated": false, "source": "KBA, pm01/2025 (역산); VDA Automobil-Insight 2025", "doc_ref": "https://www.vda.de/de/themen/Automobil-Insight-2025/2025-Pkw-Markt-Deutschland", "quote": "Private Halter meldeten 5 Prozent mehr Neufahrzeuge", "note": "FY2025(KBA pm01/2026): 개인 33.6%(+5.1%). 법인 우위 구조 유지." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        },
+        "product_structure": {
+          "complete": false,
+          "note": "소비자 선호(BFACH 설문)와 캡티브 신규계약(VWFS)을 분리. PCP/잔가보증 분리 시장점유율(%)은 미확보.",
+          "attributes": [
+            {
+              "key": "consumer_pref_installment",
+              "aspect": "product_consumer_pref",
+              "label": "소비자 선호 - 할부(Ratenkredit) (향후 신차)",
+              "metric_type": "ratio_pct",
+              "value": { "value": 52, "year": 2024, "estimated": false, "source": "Bankenfachverband, Marktstudie Konsumfinanzierung 2024 (F41a)", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "Ratenkredit 52% / Leasing 22% / Drei-Wege-Finanzierung 16%", "note": "소비자 신용대출 중 약 52%가 자동차 구입용(소비대출 1위 사유)." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "consumer_pref_leasing",
+              "aspect": "product_consumer_pref",
+              "label": "소비자 선호 - 리스(Leasing) (향후 신차)",
+              "metric_type": "ratio_pct",
+              "value": { "value": 22, "year": 2024, "estimated": false, "source": "Bankenfachverband, Marktstudie Konsumfinanzierung 2024 (F41a)", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "Leasing 22%", "note": "" },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "consumer_pref_pcp_balloon",
+              "aspect": "product_consumer_pref",
+              "label": "소비자 선호 - 3-way/풍선할부(Drei-Wege-Finanzierung≈PCP) (향후 신차)",
+              "metric_type": "ratio_pct",
+              "value": { "value": 16, "year": 2024, "estimated": false, "source": "Bankenfachverband, Marktstudie Konsumfinanzierung 2024 (F41a)", "doc_ref": "https://ssl.bfach.de/media/file/60841.Marktstudie_Konsumfinanzierung_2024_Pkw+weitere_Gebrauchsgueter_BFACH.pdf", "quote": "Drei-Wege-Finanzierung 16%", "note": "PCP(풍선할부) 근사치. 정밀 PCP/잔가보증 시장점유율은 미확보." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "captive_new_leasing_contracts",
+              "aspect": "product_captive_mix",
+              "label": "캡티브(VWFS) 신규 리스계약 건수",
+              "metric_type": "count",
+              "value": { "value": 368452, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18 (Key Figures by Segment)", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Leasing business Germany 368,452", "note": "독일은 리스 우세(리스 368,452 > 할부 143,007). 캡티브 한정." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "captive_new_retail_contracts",
+              "aspect": "product_captive_mix",
+              "label": "캡티브(VWFS) 신규 할부(retail financing)계약 건수",
+              "metric_type": "count",
+              "value": { "value": 143007, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18 (Key Figures by Segment)", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Retail financing Germany 143,007", "note": "캡티브 한정. 전체 시장 상품믹스 아님." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        },
+        "key_players": {
+          "complete": false,
+          "note": "캡티브 중심. 침투율은 각사 그룹 인도 기준 내부 지표(국가 시장점유율 아님). BMW FS 수치는 검증 기각으로 미수록.",
+          "attributes": [
+            {
+              "key": "vw_group_penetration",
+              "aspect": "captive_penetration_group",
+              "label": "VW Group 침투율(리스+금융 차량/그룹 인도)",
+              "metric_type": "ratio_pct",
+              "value": { "value": 34.1, "year": 2024, "estimated": false, "source": "Volkswagen Group, Annual Report 2024 (Financial Services)", "doc_ref": "https://annualreport2024.volkswagen-group.com/group-management-report/business-development/financial-services.html", "quote": "penetration rate increased to 34.1 (32.8)%", "note": "2023: 32.8%. 그룹 글로벌 기준." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "vwfs_country_penetration",
+              "aspect": "captive_penetration_country",
+              "label": "VWFS AG 독일 침투율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 66.8, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.11/17/73", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Germany 66.8", "note": "VWFS AG 글로벌 침투율 53.4%. 캡티브 내부 지표." },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "vwfs_new_contracts",
+              "aspect": "captive_new_contracts",
+              "label": "VWFS AG 독일 신규계약 건수",
+              "metric_type": "count",
+              "value": { "value": 1197521, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Germany 1,197,521", "note": "보유계약 6,659,057건." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "scf_customer_assets_eur",
+              "aspect": "bank_captive_portfolio",
+              "label": "Santander Consumer Finance 고객 금융자산(상각후원가)",
+              "metric_type": "eur",
+              "value": { "value": 47566489000, "year": 2024, "estimated": false, "source": "Santander Consumer Finance, Consolidated Annual Accounts 2024", "doc_ref": "https://www.santanderconsumer.com/wp-content/uploads/2025/06/santander-consumer-finance-consolidated-annual-accounts-2024.pdf", "quote": "Financial assets at amortized cost - customers, Germany 47,566,489 (thousand EUR)", "note": "독일이 SCF 최대 단일 지역시장(>스페인 296억€, 그룹 총 1,169억€)." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "country": "스페인",
+      "country_code": "ES",
+      "region": "유럽",
+      "status": "부분확보",
+      "data_year": 2025,
+      "note": "운용리스(renting) 채널 급성장(+36.8%). 캡티브 신규계약 기준 상품구조는 독일과 반대로 할부 우세. 전체 금융 침투율(할부+PCP)은 미확보.",
+      "dimensions": {
+        "penetration": {
+          "complete": false,
+          "note": "AER 25.74%는 운용리스(renting)만의 총등록 대비 비중. 할부+PCP 포함 전체 침투율은 미확보(2차 조사 과제). 독일 항목과 aspect 가 달라 직접 비교 주의.",
+          "attributes": [
+            {
+              "key": "renting_penetration_total_reg",
+              "aspect": "penetration_operlease_totalreg",
+              "label": "운용리스(renting) / 총 등록 비중",
+              "metric_type": "ratio_pct",
+              "value": { "value": 25.74, "year": 2025, "estimated": false, "source": "AER (Asociación Española de Renting de Vehículos), 2025 보도자료", "doc_ref": "https://ae-renting.es/prensa-noticias/notas-de-prensa/el-renting-cierra-el-ano-con-una-inversion-de-8-178-millones-de-euros-en-compra-de-vehiculos/", "quote": "El peso del renting en el total de las matriculaciones en 2025 es del 25,74%", "note": "2024년 27.67%에서 하락. 운용리스 한정 — 할부/PCP 미포함." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "renting_vehicle_investment_eur",
+              "aspect": "operlease_investment",
+              "label": "렌탈 부문 차량구매 투자액",
+              "metric_type": "eur",
+              "value": { "value": 8178000000, "year": 2025, "estimated": false, "source": "AER, 2025 보도자료", "doc_ref": "https://ae-renting.es/prensa-noticias/notas-de-prensa/el-renting-cierra-el-ano-con-una-inversion-de-8-178-millones-de-euros-en-compra-de-vehiculos/", "quote": "inversión de 8.178 millones de euros, un 7,35% más que en 2024", "note": "+7.35% YoY (2024: 7,618M€)." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "fin_penetration_total",
+              "aspect": "penetration_total_financing",
+              "label": "전체 오토금융(할부+PCP+리스) 침투율 / 판매",
+              "metric_type": "ratio_pct",
+              "value": { "value": null, "year": 2025, "estimated": false, "source": null, "quote": null, "note": "공식 자료에서 확인 불가. ASNEF/ANFAC·AECOC 필요(2차 조사 과제).", "status": "공식 자료에서 확인 불가" },
+              "verification": { "verified": false, "vote": null }
+            }
+          ]
+        },
+        "channel_mix": {
+          "complete": true,
+          "note": "ANFAC FY2024 등록 채널 분할(승용차·LCV). 개인/법인/렌탈 3분할.",
+          "attributes": [
+            {
+              "key": "pv_reg_private",
+              "aspect": "channel_pv_private",
+              "label": "승용차 등록 - 개인(particular)",
+              "metric_type": "count",
+              "value": { "value": 456933, "year": 2024, "estimated": false, "source": "ANFAC, Matriculaciones Diciembre 2024", "doc_ref": "https://anfac.com/wp-content/uploads/2025/01/NP-Matriculaciones-Diciembre-2024-COMPLETA.pdf", "quote": "Particular 456.933 (+8,9%)", "note": "총 승용차 1,016,885대. 비중 약 44.9%." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "pv_reg_company",
+              "aspect": "channel_pv_company",
+              "label": "승용차 등록 - 법인(empresa)",
+              "metric_type": "count",
+              "value": { "value": 373826, "year": 2024, "estimated": false, "source": "ANFAC, Matriculaciones Diciembre 2024", "doc_ref": "https://anfac.com/wp-content/uploads/2025/01/NP-Matriculaciones-Diciembre-2024-COMPLETA.pdf", "quote": "Empresa 373.826 (-5,1%)", "note": "비중 약 36.8%." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "pv_reg_rental",
+              "aspect": "channel_pv_rental",
+              "label": "승용차 등록 - 렌탈(alquilador)",
+              "metric_type": "count",
+              "value": { "value": 186126, "year": 2024, "estimated": false, "source": "ANFAC, Matriculaciones Diciembre 2024", "doc_ref": "https://anfac.com/wp-content/uploads/2025/01/NP-Matriculaciones-Diciembre-2024-COMPLETA.pdf", "quote": "Alquilador 186.126 (+36,8%)", "note": "비중 약 18.3%. 급성장." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "lcv_reg_total",
+              "aspect": "channel_lcv_total",
+              "label": "경상용차(LCV) 등록 총계",
+              "metric_type": "count",
+              "value": { "value": 165847, "year": 2024, "estimated": false, "source": "ANFAC, Matriculaciones Diciembre 2024", "doc_ref": "https://anfac.com/wp-content/uploads/2025/01/NP-Matriculaciones-Diciembre-2024-COMPLETA.pdf", "quote": "TOTAL COMERCIALES LIGEROS 165.847 (+13,6%)", "note": "법인 116,466(70.2%) / 자영업 27,896(16.8%) / 렌탈 21,485(13.0%)." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        },
+        "product_structure": {
+          "complete": false,
+          "note": "캡티브(VWFS) 신규계약 기준 할부 우세. PCP/잔가보증 분리 비중 미확보.",
+          "attributes": [
+            {
+              "key": "captive_new_retail_contracts",
+              "aspect": "product_captive_mix",
+              "label": "캡티브(VWFS) 신규 할부(retail financing)계약 건수",
+              "metric_type": "count",
+              "value": { "value": 47371, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Retail financing Spain 47,371", "note": "스페인은 할부 우세(할부 47,371 > 리스 17,389). 독일과 반대." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "captive_new_leasing_contracts",
+              "aspect": "product_captive_mix",
+              "label": "캡티브(VWFS) 신규 리스계약 건수",
+              "metric_type": "count",
+              "value": { "value": 17389, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Leasing business Spain 17,389", "note": "캡티브 한정." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "pcp_balloon_share",
+              "aspect": "product_pcp_share",
+              "label": "PCP/잔가보증(valor futuro garantizado) 비중",
+              "metric_type": "ratio_pct",
+              "value": { "value": null, "year": 2025, "estimated": false, "source": null, "quote": null, "note": "공식 자료에서 확인 불가. ASNEF/AELR 필요(2차 조사 과제).", "status": "공식 자료에서 확인 불가" },
+              "verification": { "verified": false, "vote": null }
+            }
+          ]
+        },
+        "key_players": {
+          "complete": false,
+          "note": "VWFS·SCF 확보. 캡티브 침투율은 내부 지표(시장점유율 아님).",
+          "attributes": [
+            {
+              "key": "vwfs_country_penetration",
+              "aspect": "captive_penetration_country",
+              "label": "VWFS AG 스페인 침투율",
+              "metric_type": "ratio_pct",
+              "value": { "value": 41.3, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.11/17/73", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Spain 41.3", "note": "연결 기준 스페인 40.4. 캡티브 내부 지표." },
+              "verification": { "verified": true, "vote": "2-1" }
+            },
+            {
+              "key": "vwfs_new_contracts",
+              "aspect": "captive_new_contracts",
+              "label": "VWFS AG 스페인 신규계약 건수",
+              "metric_type": "count",
+              "value": { "value": 184247, "year": 2024, "estimated": false, "source": "VWFS AG, 2024 IFRS Annual Report p.18", "doc_ref": "https://www.vwfs.com/content/dam/bluelabel/valid/www-vwfs-com/investor-relations/vwfs-ag/gesch%C3%A4ftsberichte/englisch/EN_GB%202024%20VW%20FS%20AG%20IFRS.pdf", "quote": "Spain 184,247", "note": "보유계약 1,359,214건." },
+              "verification": { "verified": true, "vote": "3-0" }
+            },
+            {
+              "key": "scf_customer_assets_eur",
+              "aspect": "bank_captive_portfolio",
+              "label": "Santander Consumer Finance 고객 금융자산(상각후원가)",
+              "metric_type": "eur",
+              "value": { "value": 29642730000, "year": 2024, "estimated": false, "source": "Santander Consumer Finance, Consolidated Annual Accounts 2024", "doc_ref": "https://www.santanderconsumer.com/wp-content/uploads/2025/06/santander-consumer-finance-consolidated-annual-accounts-2024.pdf", "quote": "Financial assets at amortized cost - customers, Spain 29,642,730 (thousand EUR)", "note": "SCF 'Automotive' 사업부(그룹 전체) 2024 NII 22.1억€, 세전이익 13.3억€." },
+              "verification": { "verified": true, "vote": "3-0" }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "context_reference": {
+    "note": "국가별 수치 아님 — 유럽 집계 배경. 비교에 사용하지 말 것.",
+    "europe_leasing_automotive_share_2024": { "value": 75, "year": 2024, "estimated": false, "source": "Leaseurope, Annual 2024 Results", "doc_ref": "https://www.leaseurope.org/european-leasing-market-overview-2024", "quote": "Automotive remained the leading asset category in 2024, accounting for 75% of total new business volumes, or approximately €338 billion", "note": "승용차 +4.4%, 상용차 +5.7%." }
+  },
+  "refuted_claims": [
+    { "claim": "독일 리스 유통경로: 캡티브/딜러 56%, 직판 31%, 은행 8%, 브로커 5%", "vote": "1-2", "source": "https://jahresbericht.leasingverband.de/leasing-markt-und-umfeld/marktbericht-2024/", "reason": "1차 출처 인용 불일치" },
+    { "claim": "BMW Group Financial Services 침투율 42.3% (2023 37.7%, +4.6pp)", "vote": "1-2", "source": "https://www.bmwgroup.com/en/report/2024/index.html", "reason": "보고서 수치 확인 불가" },
+    { "claim": "BMW Group Financial Services 신규 금융·리스계약 1,252,251건(+12.5%)", "vote": "0-3", "source": "https://www.bmwgroup.com/en/report/2024/index.html", "reason": "반증" },
+    { "claim": "BMW Group Financial Services 신규 비즈니스 볼륨 465.31억€(+13.6%)", "vote": "1-2", "source": "https://www.bmwgroup.com/en/report/2024/index.html", "reason": "반증" },
+    { "claim": "BFACH 회원은행 2024 자동차 160만대 금융 / 신규 391억€ / 포트폴리오 935억€(+4.2%)", "vote": "0-3", "source": "https://ssl.bfach.de/bankenfachverband.php/cat/218/aid/11131/title/Finanzierung_2024_im_UEberblick", "reason": "반증" },
+    { "claim": "스페인 renting 차종별 분해(승용 272,223 / 밴·픽업 40,299 / LCV 21,523 / 중장비 2,097, 밴 점유율 44.94%)", "vote": "0-3", "source": "https://ae-renting.es/prensa-noticias/notas-de-prensa/el-renting-cierra-el-ano-con-una-inversion-de-8-178-millones-de-euros-en-compra-de-vehiculos/", "reason": "반증" }
+  ]
+}

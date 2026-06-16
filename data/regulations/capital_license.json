@@ -1,0 +1,313 @@
+{
+  "meta": {
+    "description": "글로벌 진출 전략 시뮬레이션 AGENT - 캐피탈(여신전문금융) 진출 라이선스 JSON 초안 (DB 스키마 확정 전). 국가별 비은행 여신금융(여신·대출업, 리스·할부금융, 팩토링·기업금융) 진출에 필요한 라이선스/인가의 명칭·발급기관·근거법령·자본금요건·절차를 공식 출처 기준으로 정리.",
+    "definition_doc": "사용자 지시 기준으로 조사 (정의 문서 미작성)",
+    "scope_note": "사용자 지시: 캐피탈사 진출에 필요한 라이선스 정보. 사업범위=여신·대출업 + 리스·할부금융 + 팩토링·기업금융(예금수취 없는 비은행). 대상 국가=한국·미국·인도·독일·스페인. 대상 연도=2025.",
+    "data_year": "2025 (항목별 최신 갱신본 기준연도 별도 표기)",
+    "countries": ["한국", "미국", "인도", "독일", "스페인"],
+    "items": [
+      "license (라이선스/인가 명칭)",
+      "authority (발급·감독 기관)",
+      "legal_basis (근거 법령·조항)",
+      "capital_requirement (자본금/등록 요건)",
+      "procedure (발급 절차·소요기간)"
+    ],
+    "field_schema": "값+신뢰성 메타가 필요한 필드는 {value, year, estimated, source, doc_ref?, quote?, note?} 객체로 표기한다. estimated=true 는 추정/미확정, false 는 공식 출처로 확정. value=null 또는 status='공식 자료에서 확인 불가' 는 미확보(누락=미확보, 지어내기 금지).",
+    "notes": [
+      "JSON 초안 — DB 스키마 확정 시 정규화/테이블 구조 조정 예정.",
+      "사용자 지시: 출처는 각국 정부 공식 자료 또는 공식 감독기관(중앙은행·금융감독청 등)의 1차 자료만 사용. 검색·인용 모두 공식 기관 도메인만 허용(로펌 블로그·컨설팅 요약·위키피디아 배제).",
+      "한국=국가법령정보센터(law.go.kr)·금융위(fsc.go.kr) / 미국=CFPB(consumerfinance.gov)·주 감독청(California DFPI) / 인도=RBI(rbi.org.in) / 독일=BaFin(bafin.de) / 스페인=Banco de España(bde.es)·BOE(boe.es).",
+      "미국은 단일 연방 캐피탈 라이선스 부재 — 주(州)별 lender license + 연방 CFPB 감독의 이중구조. 캘리포니아(CFLL)를 대표 사례로 수록, 타 주는 미확보.",
+      "한국 시설대여·할부금융 업종별 자본금 정확 금액(제5조 본문)은 law.go.kr 자동조회 차단으로 미확보. 정의·허가/등록 구분은 법령 원문 확인, 신기술금융 100억원은 FSC 보도자료로 검증.",
+      "인도 RBI 사이트는 봇 차단(403/CAPTCHA)으로 직접 fetch 불가 — NOF·법조항·정의는 RBI 공식 인덱싱 페이지 검색결과(rbi.org.in 도메인 한정)로 교차확인."
+    ],
+    "open_gaps": [
+      "한국: 시설대여업·할부금융업 업종별 자본금 정확 금액(여신전문금융업법 제5조 본문) 미확보.",
+      "미국: 캘리포니아 외 49개 주(+준주)별 lender license 자본·보증보험·금리상한 요건 미확보(진출 주 확정 후 개별 조사).",
+      "인도: RBI Master Direction PDF 원문 직접 대조 미완(봇 차단). 공식 검색결과로 NOF·§45-IA 확보.",
+      "공통: 외국법인 지점(branch) vs 현지법인(subsidiary) 설립 시 추가 요건(상호주의·본국 감독당국 동의 등)은 본 조사 범위 외."
+    ],
+    "scope_definition": {
+      "사업범위": "여신·대출업 + 리스·할부금융 + 팩토링·기업금융 (예금수취 없는 비은행 여신금융)",
+      "제외": "은행업(예금수취), 지급결제·전자화폐(별도 인가)"
+    }
+  },
+
+  "licenses": [
+    {
+      "country": "한국",
+      "country_code": "KR",
+      "region": "아시아 & 태평양",
+      "status": "확보(구조·신기술금융 자본금) / 부분미확보(리스·할부 자본금)",
+      "license": {
+        "value": "여신전문금융업 인가 — 신용카드업(허가), 시설대여업(리스)·할부금융업·신기술사업금융업(등록)",
+        "year": 2025,
+        "estimated": false,
+        "source": "여신전문금융업법 — 국가법령정보센터 (law.go.kr/법령/여신전문금융업법)",
+        "quote": "'여신전문금융업'이란 신용카드업, 시설대여업, 할부금융업 또는 신기술사업금융업을 말한다.",
+        "note": "신용카드업만 허가제, 리스·할부·신기술은 등록제. 예금수취 불가."
+      },
+      "authority": {
+        "value": "금융위원회(허가·등록), 금융감독원(감독·검사)",
+        "year": 2025,
+        "estimated": false,
+        "source": "여신전문금융업법 제3조 — 국가법령정보센터",
+        "quote": "'신용카드업자'란 제3조제1항에 따라 신용카드업의 허가를 받거나 등록을 한 자를 말한다."
+      },
+      "legal_basis": {
+        "value": "「여신전문금융업법」 제3조(허가 등)·제5조(자본금), 동법 시행령, 여신전문금융업감독규정",
+        "year": 2025,
+        "estimated": false,
+        "source": "https://www.law.go.kr/법령/여신전문금융업법"
+      },
+      "capital_requirement": {
+        "sin_gisul_geumyung": {
+          "value": "신기술사업금융업 100억원 이상",
+          "year": 2024,
+          "estimated": false,
+          "source": "금융위 보도자료 — 여신전문금융업법 시행령 개정안 국무회의 통과 (fsc.go.kr/no010101/72364)",
+          "quote": "자본금 요건 완화 : 200 → 100억원 이상",
+          "note": "2024년 시행령 개정으로 200억원→100억원 완화."
+        },
+        "leasing_installment": {
+          "value": null,
+          "status": "공식 자료에서 확인 불가",
+          "year": 2025,
+          "estimated": false,
+          "source": null,
+          "note": "시설대여업·할부금융업 업종별 자본금 정확 금액(제5조 본문)은 law.go.kr이 조문을 JS 렌더링하고 자동조회를 차단해 화면 캡처 미확보. 정의·허가/등록 구분은 법령 원문 확인."
+        },
+        "definition_jagibon": {
+          "value": "'자기자본'=납입자본금·자본잉여금 및 이익잉여금 등의 합계액(대통령령 위임)",
+          "year": 2025,
+          "estimated": false,
+          "source": "여신전문금융업법 제2조제19호 — 국가법령정보센터",
+          "quote": "'자기자본'이란 납입자본금·자본잉여금 및 이익잉여금 등의 합계액으로서 대통령령으로 정하는 것을 말한다."
+        }
+      },
+      "procedure": {
+        "value": "금융위원회에 허가(신용카드업) 또는 등록(리스·할부·신기술) 신청. 자본금·인력·물적설비·대주주 요건 심사.",
+        "year": 2025,
+        "estimated": false,
+        "source": "여신전문금융업법 제3조~제6조 — 국가법령정보센터",
+        "note": "구체 소요기간·세부 제출서류는 감독규정·시행세칙 영역(본 조사 미확보)."
+      }
+    },
+
+    {
+      "country": "미국",
+      "country_code": "US",
+      "region": "미주",
+      "status": "확보(연방구조 + 캘리포니아 대표사례) / 타 주 미확보",
+      "license": {
+        "value": "단일 연방 캐피탈 라이선스 없음. 주(州)별 lender license(예: California Finance Lenders License) + 연방 CFPB 감독의 이중구조.",
+        "year": 2025,
+        "estimated": false,
+        "source": "CFPB — Institutions subject to CFPB supervisory authority (consumerfinance.gov/compliance/supervision-examinations/institutions/)",
+        "quote": "Congress authorized the CFPB to supervise nonbank financial companies where it has reasonable cause to believe that the company is posing risk to consumers.",
+        "note": "진출하는 주마다 개별 lender license 취득 필요. 신청은 NMLS 시스템 경유."
+      },
+      "authority": {
+        "value": "각 주 금융감독청(예: California DFPI) + 연방 CFPB(소비자금융 감독)",
+        "year": 2025,
+        "estimated": false,
+        "source": "DFPI — About California Financing Law (dfpi.ca.gov); CFPB (consumerfinance.gov)"
+      },
+      "legal_basis": {
+        "value": "주법(예: California Financing Law) + 연방 SAFE Act(12 CFR Part 1007·1008)",
+        "year": 2025,
+        "estimated": false,
+        "source": "CFPB — SAFE Act examination procedures (consumerfinance.gov)",
+        "quote": "The CFPB's SAFE Act regulations for federally regulated institutions are at 12 CFR Part 1007, followed by its rule for State compliance and Bureau registration at 12 CFR Part 1008."
+      },
+      "capital_requirement": {
+        "california_example": {
+          "value": "California Finance Lenders License: 최소 순자산 $25,000 + 보증보험(surety bond) $25,000",
+          "year": 2025,
+          "estimated": false,
+          "source": "DFPI — About California Financing Law (dfpi.ca.gov/regulated-industries/california-financing-law/about-california-financing-law/)",
+          "quote": "The law requires applicants to have and maintain a minimum net worth of at least $25,000 and to obtain and maintain a $25,000 surety bond.",
+          "note": "캘리포니아 대표사례. 자본·보증보험 요건은 주마다 상이."
+        },
+        "other_states": {
+          "value": null,
+          "status": "공식 자료에서 확인 불가",
+          "year": 2025,
+          "estimated": false,
+          "source": null,
+          "note": "캘리포니아 외 49개 주(+준주)별 요건 미확보. 진출 주 확정 후 개별 조사 필요."
+        }
+      },
+      "procedure": {
+        "value": "NMLS(Nationwide Multistate Licensing System) 경유 주별 신청. 대주주 범죄경력·규제위반 이력 없을 것.",
+        "year": 2025,
+        "estimated": false,
+        "source": "DFPI — California Finance Lenders License FAQ (dfpi.ca.gov)",
+        "quote": "If you are applying for a new license under the California Financing Law, apply through NMLS."
+      }
+    },
+
+    {
+      "country": "인도",
+      "country_code": "IN",
+      "region": "아시아 & 태평양",
+      "status": "확보(공식 검색결과 교차확인) / RBI 원문 PDF 직접대조 미완",
+      "license": {
+        "value": "NBFC 등록(Certificate of Registration) — 여신·리스·할부=NBFC-ICC(Investment and Credit Company), 팩토링=NBFC-Factor",
+        "year": 2025,
+        "estimated": false,
+        "source": "RBI — NBFC FAQs (rbi.org.in/commonman/Upload/English/FAQs/PDFs/ALLNBFC23042025.pdf)",
+        "quote": "A Non-Banking Financial Company (NBFC) is a company registered under the Companies Act ... engaged in the business of loans and advances, acquisition of shares/stocks/bonds/debentures/securities.",
+        "note": "Companies Act로 회사 설립 후 RBI 등록 필수."
+      },
+      "authority": {
+        "value": "Reserve Bank of India (RBI)",
+        "year": 2025,
+        "estimated": false,
+        "source": "RBI — Master Direction for NBFC (rbidocs.rbi.org.in/rdocs/notification/PDFs/45MD01092016B52D6E12D49F411DB63F67F2344A4E09.PDF)"
+      },
+      "legal_basis": {
+        "value": "Reserve Bank of India Act, 1934 제45-IA조; NBFC Master Directions",
+        "year": 2025,
+        "estimated": false,
+        "source": "RBI Act 1934 §45-IA (RBI 공식 페이지)",
+        "note": "§45-IA: NBFC는 RBI 등록(Certificate of Registration) 및 최소 NOF 보유 없이는 영업 불가."
+      },
+      "capital_requirement": {
+        "nbfc_icc_new": {
+          "value": "NBFC-ICC 신규: NOF ₹10 crore (2억 루피)",
+          "year": 2025,
+          "estimated": false,
+          "source": "RBI — Minimum NOF for commencement of business of NBFC (rbidocs.rbi.org.in/rdocs/Notification/PDFs/26156.PDF)",
+          "note": "NOF=Net Owned Fund."
+        },
+        "nbfc_icc_glidepath": {
+          "value": "기존 NBFC-ICC: ₹2cr → ₹5cr(2025.3.31) → ₹10cr(2027.3.31)",
+          "year": 2025,
+          "estimated": false,
+          "source": "RBI — Minimum NOF notification (rbi.org.in 공식 페이지)",
+          "note": "기한 내 미달 시 등록(CoR) 유지 불가."
+        },
+        "nbfc_factor": {
+          "value": "NBFC-Factor: ₹5cr → ₹7cr(2025.3.31) → ₹10cr(2027.3.31)",
+          "year": 2025,
+          "estimated": false,
+          "source": "RBI — Minimum NOF notification (rbi.org.in 공식 페이지)"
+        },
+        "nof_definition": {
+          "value": "NOF = 납입자본금 + 자유적립금(free reserves) − 누적손실·이연수익비용·기타무형자산 − 동일그룹 자회사 투자·대여(자기자본 10% 초과분)",
+          "year": 2025,
+          "estimated": false,
+          "source": "RBI — NBFC FAQs (rbi.org.in)",
+          "quote": "Net owned funds ... is the aggregate of paid-up capital and free reserves, netted by ... accumulated balance of loss, deferred revenue expenditure and other intangible assets ..."
+        }
+      },
+      "procedure": {
+        "value": "온라인 포털(COSMOS) 신청 후 인증서·서류 제출. 회사 설립·NOF 충족·적격경영진(fit and proper) 심사 후 RBI가 Certificate of Registration 발급.",
+        "year": 2025,
+        "estimated": false,
+        "source": "RBI — NBFC FAQs / Documents required for registration (rbi.org.in)",
+        "note": "세부 제출서류·소요기간은 RBI 봇차단으로 원문 직접대조 미완(미확보)."
+      }
+    },
+
+    {
+      "country": "독일",
+      "country_code": "DE",
+      "region": "유럽",
+      "status": "확보(BaFin 공식)",
+      "license": {
+        "value": "KWG에 따른 BaFin 인가(Erlaubnis) — 대출업(Kreditgeschäft)/금융리스(Finanzierungsleasing)/팩토링(Factoring) 업종별",
+        "year": 2025,
+        "estimated": false,
+        "source": "BaFin — Finanzierungsleasing & Factoring (bafin.de/DE/unternehmen-maerkte/erlaubnis-registrierung/leasing-factoring/leasing-factoring.html)"
+      },
+      "authority": {
+        "value": "BaFin (Bundesanstalt für Finanzdienstleistungsaufsicht) + Deutsche Bundesbank 공동",
+        "year": 2025,
+        "estimated": false,
+        "source": "BaFin — Finanzierungsleasing & Factoring (bafin.de)"
+      },
+      "legal_basis": {
+        "value": "KWG(독일은행법): 대출업 §1 Abs.1 S.2 Nr.2·§32 / 금융리스 §32 Abs.1 S.1 i.V.m. §1 Abs.1a S.2 Nr.10 / 팩토링 §32 Abs.1 S.1 i.V.m. §1 Abs.1a S.2 Nr.9",
+        "year": 2025,
+        "estimated": false,
+        "source": "BaFin — Finanzierungsleasing & Factoring (bafin.de)",
+        "quote": "Finanzierungsleasing: § 32 Absatz 1 Satz 1 in Verbindung mit § 1 Absatz 1a Satz 2 Nummer 10 KWG; Factoring: § 1 Absatz 1a Satz 2 Nummer 9 KWG."
+      },
+      "capital_requirement": {
+        "kreditgeschaeft": {
+          "value": 5000000,
+          "currency": "EUR",
+          "year": 2025,
+          "estimated": false,
+          "source": "BaFin — Bankgeschäfte (bafin.de/DE/unternehmen-maerkte/erlaubnis-registrierung/bankgeschaefte/bankgeschaefte.html)",
+          "quote": "Nach § 31 KWG ist ein Anfangskapital von mindestens 5 Mio. Euro erforderlich.",
+          "note": "대출업(CRR-Kreditinstitut, 예금+대출). EZB와 공동 심사."
+        },
+        "leasing_factoring": {
+          "value": "법정 최소자본 없음 (§ 2 Abs. 7a KWG로 자기자본·유동성 요건 면제 → 회사법상 자본금만 충족)",
+          "year": 2025,
+          "estimated": false,
+          "source": "BaFin — Finanzierungsleasing & Factoring (bafin.de)",
+          "quote": "Gemäß § 2 Absatz 7a KWG ... verlangt das Gesetz kein Mindestkapital. ... Eigenkapital- und Liquiditätsanforderungen für Kreditgeschäfte gelten nicht.",
+          "note": "리스·팩토링은 'privileged' 특수여신 → 자본요건 경감."
+        }
+      },
+      "procedure": {
+        "value": "AnzV 양식으로 BaFin(1부) + Deutsche Bundesbank 동시 제출, BA 14/15 전자사본. BAIT/DORA 증빙, 적격 경영진(대출업 최소 2인).",
+        "year": 2025,
+        "estimated": false,
+        "source": "BaFin — Finanzierungsleasing & Factoring (bafin.de)",
+        "quote": "Gebühr: 4.646 Euro",
+        "note": "리스·팩토링 인가 신청 수수료 €4,646."
+      }
+    },
+
+    {
+      "country": "스페인",
+      "country_code": "ES",
+      "region": "유럽",
+      "status": "확보(Banco de España·BOE 공식)",
+      "license": {
+        "value": "Establecimiento Financiero de Crédito (EFC) 인가 — 전문여신기관(예금수취 불가)",
+        "year": 2025,
+        "estimated": false,
+        "source": "Banco de España — Other institutions supervised / Activity licence (bde.es)",
+        "quote": "Specialised lending institutions (EFC) are non-deposit-taking credit entities that arrange loans, guarantees, leasing, and factoring.",
+        "note": "소비자·모기지 대출, 보증, 리스, 팩토링, 카드 영위. 예금수취 불가 → 예금보험기금 가입 의무 없음."
+      },
+      "authority": {
+        "value": "경제부 재무총국(Secretaría General del Tesoro y Financiación Internacional) 인가, Banco de España 사전심사·감독",
+        "year": 2025,
+        "estimated": false,
+        "source": "Banco de España — Activity licence (bde.es)",
+        "quote": "authorization ... is granted by the Ministry of Economy ... following a report by the Banco de España and the Executive Service of the Commission for the Prevention of Money Laundering."
+      },
+      "legal_basis": {
+        "value": "Ley 5/2015(2015.4.27, 기업금융 촉진법) Título II; Real Decreto 309/2020(2020.2.11)",
+        "year": 2025,
+        "estimated": false,
+        "source": "BOE — Real Decreto 309/2020 (boe.es/buscar/doc.php?id=BOE-A-2020-2613)"
+      },
+      "capital_requirement": {
+        "minimum_capital": {
+          "value": 5000000,
+          "currency": "EUR",
+          "year": 2025,
+          "estimated": false,
+          "source": "Banco de España / BOE — Real Decreto 309/2020",
+          "quote": "A minimum capital of 5 million euros is required, entirely paid in cash and represented by registered shares.",
+          "note": "전액 현금 납입, 기명주식, sociedad anónima(주식회사) 형태, 존속기간 무기한."
+        }
+      },
+      "procedure": {
+        "value": "재무총국에 신청, Banco de España·SEPBLAC 사전 보고서. 접수(또는 서류보완 완료) 후 원칙 3개월 내, 최대 12개월 내 결정.",
+        "year": 2025,
+        "estimated": false,
+        "source": "Banco de España — Activity licence (bde.es)",
+        "quote": "The authorization request must be resolved within three months ... and in any case within twelve months of reception."
+      }
+    }
+  ]
+}
