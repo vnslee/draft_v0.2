@@ -1,0 +1,268 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  오토금융 진단 콘솔 — ECS Fargate(ARM64) + DocumentDB + ALB.
+  기존 "Base Infra" VPC/서브넷/NAT는 파라미터로 참조만 한다(생성하지 않음).
+  단일 태스크에 nginx(프론트, :80) + backend(:8000) 2개 컨테이너를 함께 띄우고,
+  nginx가 /api·/ws 를 127.0.0.1:8000 로 프록시한다.
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+  PublicSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: ALB용 퍼블릭 서브넷 2개
+  PrivateSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: ECS 태스크용 프라이빗 서브넷 2개 (NAT 라우팅됨)
+  DbSubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: DocumentDB용 DB 서브넷 2개
+  BackendImageUri:
+    Type: String
+  FrontendImageUri:
+    Type: String
+  DocDbSecretArn:
+    Type: String
+    Description: "{username,password} JSON 시크릿 ARN (auto-finance/docdb)"
+  HaikuModel:
+    Type: String
+    Default: apac.anthropic.claude-3-haiku-20240307-v1:0
+  SonnetModel:
+    Type: String
+    Default: apac.anthropic.claude-sonnet-4-20250514-v1:0
+
+Resources:
+
+  # ── 보안그룹 ────────────────────────────────────────────────
+  AlbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: auto-finance ALB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags: [{ Key: Name, Value: auto-finance-alb-sg }]
+
+  AppSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: auto-finance ECS tasks
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref AlbSg
+      Tags: [{ Key: Name, Value: auto-finance-app-sg }]
+
+  DocDbSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: auto-finance DocumentDB
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          SourceSecurityGroupId: !Ref AppSg
+      Tags: [{ Key: Name, Value: auto-finance-docdb-sg }]
+
+  # ── DocumentDB ──────────────────────────────────────────────
+  DocDbSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: auto-finance docdb subnets
+      SubnetIds: !Ref DbSubnetIds
+
+  DocDbCluster:
+    Type: AWS::DocDB::DBCluster
+    Properties:
+      MasterUsername: !Sub '{{resolve:secretsmanager:${DocDbSecretArn}:SecretString:username}}'
+      MasterUserPassword: !Sub '{{resolve:secretsmanager:${DocDbSecretArn}:SecretString:password}}'
+      DBSubnetGroupName: !Ref DocDbSubnetGroup
+      VpcSecurityGroupIds: [!Ref DocDbSg]
+      StorageEncrypted: true
+      DeletionProtection: false
+
+  DocDbInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocDbCluster
+      DBInstanceClass: db.t3.medium
+
+  # ── MONGODB_URI 시크릿 (엔드포인트 확정 후 조립) ──────────────
+  MongoUriSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: auto-finance/mongodb-uri
+      SecretString: !Sub
+        - 'mongodb://${User}:${Pwd}@${Endpoint}:27017/auto_finance?tls=true&tlsCAFile=/app/global-bundle.pem&replicaSet=rs0&retryWrites=false'
+        - User: !Sub '{{resolve:secretsmanager:${DocDbSecretArn}:SecretString:username}}'
+          Pwd: !Sub '{{resolve:secretsmanager:${DocDbSecretArn}:SecretString:password}}'
+          Endpoint: !GetAtt DocDbCluster.Endpoint
+
+  # ── IAM 역할 ────────────────────────────────────────────────
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ecs-tasks.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: read-secrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: [!Ref MongoUriSecret, !Ref DocDbSecretArn]
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ecs-tasks.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: bedrock-invoke
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: '*'
+
+  # ── 로그 ────────────────────────────────────────────────────
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /ecs/auto-finance
+      RetentionInDays: 14
+
+  # ── ECS ─────────────────────────────────────────────────────
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: auto-finance
+
+  TaskDef:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: auto-finance
+      Cpu: '512'
+      Memory: '1024'
+      NetworkMode: awsvpc
+      RequiresCompatibilities: [FARGATE]
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
+      ExecutionRoleArn: !GetAtt ExecutionRole.Arn
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ContainerDefinitions:
+        - Name: backend
+          Image: !Ref BackendImageUri
+          Essential: true
+          Environment:
+            - { Name: AWS_REGION, Value: !Ref AWS::Region }
+            - { Name: MONGODB_DB, Value: auto_finance }
+            - { Name: HAIKU_MODEL, Value: !Ref HaikuModel }
+            - { Name: SONNET_MODEL, Value: !Ref SonnetModel }
+            - { Name: CORS_ORIGINS, Value: '*' }
+          Secrets:
+            - { Name: MONGODB_URI, ValueFrom: !Ref MongoUriSecret }
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: backend
+        - Name: frontend
+          Image: !Ref FrontendImageUri
+          Essential: true
+          DependsOn:
+            - { ContainerName: backend, Condition: START }
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: frontend
+
+  # ── ALB ─────────────────────────────────────────────────────
+  Alb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Type: application
+      Scheme: internet-facing
+      Subnets: !Ref PublicSubnetIds
+      SecurityGroups: [!Ref AlbSg]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VpcId
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      HealthCheckPath: /api/health
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      Matcher: { HttpCode: '200' }
+
+  Listener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref Alb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+
+  Service:
+    Type: AWS::ECS::Service
+    DependsOn: Listener
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      TaskDefinition: !Ref TaskDef
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: DISABLED
+          Subnets: !Ref PrivateSubnetIds
+          SecurityGroups: [!Ref AppSg]
+      LoadBalancers:
+        - ContainerName: frontend
+          ContainerPort: 80
+          TargetGroupArn: !Ref TargetGroup
+      HealthCheckGracePeriodSeconds: 120
+
+Outputs:
+  AlbUrl:
+    Value: !Sub 'http://${Alb.DNSName}'
+  DocDbEndpoint:
+    Value: !GetAtt DocDbCluster.Endpoint
+  ClusterName:
+    Value: !Ref Cluster
+  TaskDefArn:
+    Value: !Ref TaskDef
+  AppSecurityGroup:
+    Value: !Ref AppSg
+  PrivateSubnets:
+    Value: !Join [',', !Ref PrivateSubnetIds]
