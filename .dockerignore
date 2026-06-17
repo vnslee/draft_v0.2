@@ -1,0 +1,14 @@
+# 백엔드 빌드 컨텍스트 = repo 루트. 불필요/민감 파일 제외.
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/node_modules
+**/dist
+src/backend/.env
+.env
+.git
+archive
+docs
+requirements
+src/frontend

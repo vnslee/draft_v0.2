@@ -1,0 +1,17 @@
+[Unit]
+Description=오토금융 해외진출 진단 백엔드
+After=network.target mongod.service
+
+[Service]
+Type=exec
+User=participant
+WorkingDirectory=/home/participant/draft_v0.2/src/backend
+EnvironmentFile=/home/participant/draft_v0.2/.env
+ExecStart=/usr/bin/python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
